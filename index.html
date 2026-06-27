@@ -845,7 +845,7 @@
               <div class="result-body">
                 <div class="form-row-2">
                   <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Student / teacher name</label>
+                    <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Student name</label>
                     <input type="text" class="input-field" id="who-input" placeholder="Full name" />
                   </div>
                   <div>
@@ -869,7 +869,7 @@
                 <div class="kit-members" id="kit-result-members"></div>
                 <div class="form-row-2" style="margin-top:14px">
                   <div>
-                    <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Student / teacher name</label>
+                    <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Student name</label>
                     <input type="text" class="input-field" id="kit-who-input" placeholder="Full name" />
                   </div>
                   <div>
@@ -916,7 +916,7 @@
           <div style="padding:20px">
             <div class="form-block" style="margin-bottom:14px">
               <label>Kit name</label>
-              <input type="text" class="input-field" id="kit-name" placeholder="e.g. Vlogging kit" />
+              <input type="text" class="input-field" id="kit-name" placeholder="e.g. Media kit 1" />
             </div>
             <div class="form-block">
               <label>Items in this kit</label>
@@ -1418,7 +1418,7 @@ function quickAction(id,action){
   var item=inventory.find(function(x){return x.id===id;});
   if(!item)return;
   if(action==='out'){
-    var who=prompt('Student or teacher name:');
+    var who=prompt('Student name:');
     if(who===null)return;
     who=who.trim();
     if(!who){showToast('A name is required to check out','ti-alert-triangle',true);return;}
@@ -1589,7 +1589,7 @@ function promptKitAction(id,action){
   var kit=kits.find(function(k){return k.id===id;});
   if(!kit)return;
   if(action==='out'){
-    var who=prompt('Student or teacher name:');
+    var who=prompt('Student name:');
     if(who===null)return;
     who=who.trim();
     if(!who){showToast('A name is required to check out','ti-alert-triangle',true);return;}
