@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Media Equipment Inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0f172a;
+    --slate: #1e293b;
+    --mid: #475569;
+    --muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --surface: #f8fafc;
+    --surface2: #f1f5f9;
+    --white: #ffffff;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --blue-border: #bfdbfe;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --green-border: #bbf7d0;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --amber-border: #fde68a;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --red-border: #fecaca;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,0.06);
+    --shadow-md: 0 4px 12px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.06);
+    --shadow-lg: 0 8px 24px rgba(15,23,42,0.10), 0 2px 6px rgba(15,23,42,0.06);
+    --sidebar-w: 240px;
+    --header-h: 64px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--surface);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── LAYOUT ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    transition: transform 0.25s;
+  }
+
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--ink);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark i { font-size: 20px; color: white; }
+
+  .logo-text { line-height: 1.2; }
+  .logo-text .name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--ink);
+  }
+  .logo-text .sub { font-size: 11px; color: var(--muted); }
+
+  .sidebar-nav { padding: 12px 10px; flex: 1; }
+
+  .nav-section { margin-bottom: 20px; }
+  .nav-label {
+    font-size: 10px; font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0 10px;
+    margin-bottom: 6px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    color: var(--mid);
+    font-size: 13px; font-weight: 500;
+    border: none; background: none; width: 100%;
+    text-align: left;
+    transition: background 0.12s, color 0.12s;
+    position: relative;
+  }
+  .nav-item i { font-size: 17px; flex-shrink: 0; }
+  .nav-item:hover { background: var(--surface); color: var(--ink); }
+  .nav-item.active { background: var(--surface); color: var(--ink); font-weight: 600; }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px; bottom: 6px;
+    width: 3px;
+    background: var(--ink);
+    border-radius: 2px;
+  }
+  .badge {
+    margin-left: auto;
+    font-size: 10px; font-weight: 600;
+    background: var(--amber-bg);
+    color: var(--amber);
+    padding: 2px 7px;
+    border-radius: 20px;
+  }
+  .badge.green { background: var(--green-bg); color: var(--green); }
+
+  .sidebar-footer {
+    padding: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .sheet-connect {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+  .sheet-connect label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 5px; font-weight: 500; }
+  .sheet-connect input {
+    width: 100%; border: 1px solid var(--border-strong);
+    border-radius: 7px; padding: 6px 9px; font-size: 12px;
+    color: var(--ink); background: var(--white);
+    outline: none; transition: border-color 0.15s;
+  }
+  .sheet-connect input:focus { border-color: var(--blue); }
+  .sheet-connect input::placeholder { color: var(--muted); }
+  .sync-status {
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 2px; font-size: 11px; color: var(--muted);
+  }
+  .sync-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted); flex-shrink: 0;
+  }
+  .sync-dot.ok { background: var(--green); }
+  .sync-dot.err { background: var(--red); }
+  .sheet-help-link {
+    display: block; font-size: 11px; color: var(--blue); margin-top: 5px; cursor: pointer; text-decoration: none;
+  }
+  .sheet-help-link:hover { text-decoration: underline; }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    height: var(--header-h);
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 14px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600; color: var(--ink); }
+  .topbar-sub { font-size: 12px; color: var(--muted); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  .hamburger {
+    display: none;
+    border: none; background: none; padding: 6px;
+    cursor: pointer; color: var(--mid); font-size: 22px;
+  }
+
+  .content { padding: 28px; flex: 1; max-width: 960px; }
+
+  /* ── PANELS ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── STAT CARDS ── */
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .stat-icon i { font-size: 18px; }
+  .stat-icon.cam { background: #e0e7ff; } .stat-icon.cam i { color: #4f46e5; }
+  .stat-icon.lens { background: #e0f2fe; } .stat-icon.lens i { color: #0284c7; }
+  .stat-icon.mem { background: #f0fdf4; } .stat-icon.mem i { color: var(--green); }
+  .stat-icon.case { background: #fef3c7; } .stat-icon.case i { color: var(--amber); }
+  .stat-icon.chg { background: #fce7f3; } .stat-icon.chg i { color: #db2777; }
+  .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--ink); }
+  .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .stat-avail { font-size: 11px; margin-top: 4px; font-weight: 500; }
+  .avail-ok { color: var(--green); }
+  .avail-low { color: var(--amber); }
+
+  /* ── SECTION HEADER ── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; color: var(--ink); }
+
+  /* ── ITEM CARDS ── */
+  .item-grid { display: flex; flex-direction: column; gap: 8px; }
+
+  .item-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: box-shadow 0.15s;
+  }
+  .item-card:hover { box-shadow: var(--shadow-md); }
+
+  .item-cat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .item-cat-icon i { font-size: 22px; }
+  .ici-camera { background: #e0e7ff; } .ici-camera i { color: #4f46e5; }
+  .ici-lens   { background: #e0f2fe; } .ici-lens i   { color: #0284c7; }
+  .ici-memory { background: #f0fdf4; } .ici-memory i { color: var(--green); }
+  .ici-case   { background: #fef3c7; } .ici-case i   { color: var(--amber); }
+  .ici-charger { background: #fce7f3; } .ici-charger i { color: #db2777; }
+
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .item-who { font-size: 12px; color: var(--mid); margin-top: 3px; }
+
+  .status-pill {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .s-in  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .s-out { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .s-missing { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+
+  .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* ── KITS ── */
+  .kit-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 10px;
+  }
+  .kit-card-top { display: flex; align-items: center; gap: 12px; }
+  .kit-icon-wrap {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: #ede9fe; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .kit-icon-wrap i { font-size: 20px; color: #7c3aed; }
+  .kit-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .kit-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .kit-members { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .kit-member-chip {
+    font-size: 11px; font-weight: 500; padding: 4px 9px;
+    border-radius: 20px; border: 1px solid var(--border-strong);
+    color: var(--mid); background: var(--surface);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .kit-member-chip.m-out { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
+  .kit-member-chip.m-missing { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+  .kit-member-chip .rm { cursor: pointer; font-size: 13px; line-height: 1; opacity: 0.6; }
+  .kit-member-chip .rm:hover { opacity: 1; }
+  .kit-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+  .kit-check-list {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    max-height: 260px; overflow-y: auto;
+  }
+  .kit-check-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-bottom: 1px solid var(--border);
+    font-size: 13px; cursor: pointer;
+  }
+  .kit-check-row:last-child { border-bottom: none; }
+  .kit-check-row:hover { background: var(--surface); }
+  .kit-check-row input { width: 15px; height: 15px; flex-shrink: 0; accent-color: var(--ink); cursor: pointer; }
+  .kit-check-row .kc-name { flex: 1; min-width: 0; }
+  .kit-check-row .kc-id { color: var(--muted); font-size: 11px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--border-strong);
+    background: var(--white); color: var(--mid);
+    transition: all 0.12s; white-space: nowrap;
+  }
+  .btn i { font-size: 15px; }
+  .btn:hover { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+  .btn-primary { background: var(--ink); color: white; border-color: var(--ink); }
+  .btn-primary:hover { background: var(--slate); }
+  .btn-out { background: var(--amber-bg); color: var(--amber); border-color: var(--amber-border); }
+  .btn-out:hover { background: #fde68a; }
+  .btn-in  { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+  .btn-in:hover  { background: #bbf7d0; }
+  .btn-sm { padding: 5px 11px; font-size: 12px; }
+  .btn-icon { padding: 7px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* ── SCAN PANEL ── */
+  .scan-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 680px) { .scan-layout { grid-template-columns: 1fr; } }
+
+  .scan-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .scan-card-body { padding: 20px; }
+  .scan-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 16px;
+    background: var(--surface);
+  }
+  .scan-zone:hover { border-color: var(--blue); background: var(--blue-bg); }
+  .scan-zone.active { border-color: var(--blue); background: var(--blue-bg); }
+  .scan-zone-icon { font-size: 46px; color: var(--muted); display: block; margin-bottom: 10px; }
+  .scan-zone h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+  .scan-zone p { font-size: 13px; color: var(--muted); }
+  #video-wrap {
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #000;
+    margin-bottom: 16px;
+    display: none;
+    position: relative;
+  }
+  #video-wrap video { width: 100%; display: block; }
+  #scan-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .scan-frame {
+    width: 180px; height: 180px;
+    border: 2px solid rgba(37,99,235,0.9);
+    border-radius: 10px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.38);
+    position: relative;
+  }
+  .scan-frame::before { content:''; position:absolute; top:-2px; left:-2px; width:22px; height:22px; border:3px solid #2563eb; border-right:none; border-bottom:none; border-radius:4px 0 0 0; }
+  .scan-frame::after  { content:''; position:absolute; bottom:-2px; right:-2px; width:22px; height:22px; border:3px solid #2563eb; border-left:none; border-top:none; border-radius:0 0 4px 0; }
+
+  .divider { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+  .divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+  .divider span { font-size: 11px; color: var(--muted); }
+
+  .manual-row { display: flex; gap: 8px; }
+  .manual-row input { flex: 1; }
+
+  .input-field {
+    height: 38px; padding: 0 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-size: 13px; color: var(--ink);
+    background: var(--white); outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+  .input-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+  .input-field::placeholder { color: var(--muted); }
+
+  /* ── RESULT CARD ── */
+  .result-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: none;
+  }
+  .result-card.visible { display: block; }
+  .result-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .result-icon-wrap {
+    width: 44px; height: 44px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .result-icon-wrap i { font-size: 24px; }
+  .result-name { font-size: 16px; font-weight: 600; color: var(--ink); }
+  .result-id   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .result-body { padding: 16px 18px; }
+  .form-row { margin-bottom: 12px; }
+  .form-row label { display: block; font-size: 12px; font-weight: 500; color: var(--mid); margin-bottom: 5px; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .result-actions { display: flex; gap: 8px; padding-top: 4px; }
+
+  /* ── LOG PANEL ── */
+  .log-toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .log-toolbar .input-field { flex: 1; min-width: 160px; }
+  .select-field {
+    height: 38px; padding: 0 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-size: 13px; color: var(--mid);
+    background: var(--white); outline: none;
+    cursor: pointer;
+  }
+  .select-field:focus { border-color: var(--blue); }
+
+  .log-list { display: flex; flex-direction: column; }
+  .log-entry {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-dot {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .log-dot i { font-size: 15px; }
+  .ld-out { background: var(--amber-bg); } .ld-out i { color: var(--amber); }
+  .ld-in  { background: var(--green-bg); } .ld-in i  { color: var(--green); }
+  .ld-miss { background: var(--red-bg); } .ld-miss i { color: var(--red); }
+  .log-body { flex: 1; }
+  .log-item-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .log-detail   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .log-time { font-size: 11px; color: var(--muted); flex-shrink: 0; padding-top: 4px; }
+
+  .card-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .card-wrap-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-wrap-header h2 { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .card-wrap-body { padding: 6px 18px 4px; }
+
+  /* ── ADD ITEM PANEL ── */
+  .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .add-grid { grid-template-columns: 1fr; } }
+  .add-full { grid-column: 1 / -1; }
+  .form-block { display: flex; flex-direction: column; gap: 5px; }
+  .form-block label { font-size: 12px; font-weight: 500; color: var(--mid); }
+  .form-block textarea {
+    border: 1px solid var(--border-strong); border-radius: var(--radius);
+    padding: 9px 12px; font-size: 13px; color: var(--ink);
+    background: var(--white); outline: none; resize: vertical;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .form-block textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+  .select-full { width: 100%; height: 38px; }
+
+  .qr-preview-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    display: none;
+    margin-top: 16px;
+  }
+  .qr-preview-box.show { display: block; }
+  .qr-preview-box canvas { display: block; margin: 0 auto 10px; }
+  .qr-label-text { font-size: 13px; color: var(--mid); font-weight: 500; }
+  .qr-sublabel { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* ── INSTRUCTIONS PANEL ── */
+  .instructions pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px; font-size: 12px; line-height: 1.7;
+    overflow-x: auto; color: var(--ink);
+    margin: 12px 0;
+  }
+  .steps { list-style: none; counter-reset: step; }
+  .steps li {
+    counter-increment: step;
+    display: flex; gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .steps li:last-child { border-bottom: none; }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--ink); color: white;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .step-body h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+  .step-body p { font-size: 13px; color: var(--mid); line-height: 1.6; }
+  .step-body a { color: var(--blue); }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty i { font-size: 40px; display: block; margin-bottom: 10px; }
+  .empty p { font-size: 13px; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--ink); color: white;
+    border-radius: var(--radius); padding: 11px 18px;
+    font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    z-index: 9999; box-shadow: var(--shadow-lg);
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.22s, transform 0.22s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast i { font-size: 17px; }
+
+  /* ── MOBILE OVERLAY ── */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.4);
+    z-index: 90;
+  }
+  .overlay.show { display: block; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .hamburger { display: flex; align-items: center; }
+    .content { padding: 16px; }
+    .topbar { padding: 0 16px; }
+    .item-actions .btn span { display: none; }
+    #toast { bottom: 16px; right: 16px; left: 16px; }
+  }
+
+  @media (max-width: 480px) {
+    .stat-row { grid-template-columns: repeat(3, 1fr); }
+    .item-card { flex-wrap: wrap; }
+    .item-actions { width: 100%; }
+  }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .filter-chip {
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1px solid var(--border-strong);
+    background: var(--white); color: var(--mid);
+    transition: all 0.12s;
+  }
+  .filter-chip:hover { border-color: var(--ink); color: var(--ink); }
+  .filter-chip.active { background: var(--ink); color: white; border-color: var(--ink); }
+
+  /* ── ALL ITEMS TABLE ── */
+  .table-toolbar {
+    display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap; margin-bottom: 14px;
+  }
+  .table-toolbar .input-field { flex: 1; min-width: 180px; }
+
+  .table-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+  .table-scroll { overflow-x: auto; }
+
+  table.items-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; table-layout: fixed;
+  }
+  table.items-table thead { background: var(--surface); }
+  table.items-table th {
+    padding: 10px 14px;
+    text-align: left; font-size: 11px; font-weight: 600;
+    color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  table.items-table th:hover { color: var(--ink); }
+  table.items-table th .sort-arrow { margin-left: 4px; opacity: 0.4; font-size: 10px; }
+  table.items-table th.sorted .sort-arrow { opacity: 1; color: var(--blue); }
+  table.items-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  table.items-table tbody tr:last-child td { border-bottom: none; }
+  table.items-table tbody tr:hover { background: var(--surface); }
+
+  .col-id    { width: 100px; }
+  .col-name  { width: auto; }
+  .col-cat   { width: 110px; }
+  .col-cond  { width: 110px; }
+  .col-status { width: 110px; }
+  .col-who   { width: 140px; }
+  .col-time  { width: 100px; }
+  .col-acts  { width: 90px; text-align: right !important; }
+
+  .cat-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .cat-camera  { background: #e0e7ff; color: #4f46e5; }
+  .cat-lens    { background: #e0f2fe; color: #0284c7; }
+  .cat-memory  { background: var(--green-bg); color: var(--green); }
+  .cat-case    { background: var(--amber-bg); color: var(--amber); }
+  .cat-charger { background: #fce7f3; color: #db2777; }
+
+  .cond-pill {
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .cond-Good { background: var(--green-bg); color: var(--green); }
+  .cond-Fair { background: var(--amber-bg); color: var(--amber); }
+  .cond-repair { background: var(--red-bg); color: var(--red); }
+
+  .tbl-actions { display: flex; gap: 4px; justify-content: flex-end; }
+  .tbl-btn {
+    width: 28px; height: 28px; border-radius: 7px;
+    border: 1px solid var(--border-strong);
+    background: var(--white); color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; transition: all 0.12s;
+    flex-shrink: 0;
+  }
+  .tbl-btn:hover { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+  .tbl-btn.del:hover { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+
+  .table-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* inline edit row */
+  .edit-row td { background: var(--blue-bg) !important; padding: 8px 10px; }
+  .edit-row input, .edit-row select {
+    height: 30px; padding: 0 8px; font-size: 12px;
+    border: 1px solid var(--blue-border); border-radius: 6px;
+    background: var(--white); color: var(--ink); outline: none; width: 100%;
+  }
+  .edit-row input:focus, .edit-row select:focus { border-color: var(--blue); }
+
+  /* modal */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,42,0.45); z-index: 500;
+    align-items: center; justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--white); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg); padding: 24px;
+    width: 90%; max-width: 420px;
+  }
+  .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--ink); }
+  .modal p  { font-size: 13px; color: var(--mid); margin-bottom: 20px; line-height: 1.6; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><i class="ti ti-camera"></i></div>
+      <div class="logo-text">
+        <div class="name">Media Inventory</div>
+        <div class="sub">Equipment tracking</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-label">Main</div>
+        <button class="nav-item active" onclick="switchTab('scan')" id="nav-scan">
+          <i class="ti ti-qrcode"></i> Scan QR code
+        </button>
+        <button class="nav-item" onclick="switchTab('inventory')" id="nav-inventory">
+          <i class="ti ti-package"></i> Inventory
+          <span class="badge green" id="nav-avail-count">—</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('kits')" id="nav-kits">
+          <i class="ti ti-stack-2"></i> Kits
+        </button>
+        <button class="nav-item" onclick="switchTab('log')" id="nav-log">
+          <i class="ti ti-history"></i> Activity log
+        </button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Manage</div>
+        <button class="nav-item" onclick="switchTab('add')" id="nav-add">
+          <i class="ti ti-plus"></i> Add new item
+        </button>
+        <button class="nav-item" onclick="switchTab('setup')" id="nav-setup">
+          <i class="ti ti-settings"></i> Sheets setup
+        </button>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sheet-connect">
+        <label>Google Sheets sync</label>
+        <div class="sync-status">
+          <div class="sync-dot" id="sync-dot"></div>
+          <span id="sync-text">Not connected</span>
+        </div>
+        <a class="sheet-help-link" onclick="loadFromSheets()">Reload from Sheets</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+      <div>
+        <div class="topbar-title" id="topbar-title">Scan QR code</div>
+        <div class="topbar-sub" id="topbar-sub">Check equipment in and out</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-sm" onclick="switchTab('add')"><i class="ti ti-plus"></i> <span>Add item</span></button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- SCAN PANEL -->
+      <div class="panel active" id="panel-scan">
+        <div class="scan-layout">
+          <div>
+            <div class="scan-card">
+              <div class="scan-card-body">
+                <div class="scan-zone" id="scan-zone" onclick="toggleCamera()">
+                  <i class="ti ti-qrcode scan-zone-icon" id="scan-icon"></i>
+                  <h3 id="scan-title">Tap to open camera</h3>
+                  <p id="scan-sub">Point at an item's QR label to check it out or in</p>
+                </div>
+                <div id="video-wrap">
+                  <video id="video" autoplay muted playsinline></video>
+                  <div id="scan-overlay"><div class="scan-frame"></div></div>
+                </div>
+                <div class="divider"><span>or check out a kit</span></div>
+                <div class="manual-row">
+                  <select class="select-field" id="scan-kit-select" style="flex:1">
+                    <option value="">Choose a kit…</option>
+                  </select>
+                  <button class="btn btn-primary" onclick="scanKitLookup()"><i class="ti ti-stack-2"></i></button>
+                </div>
+                <div class="divider"><span>or enter manually</span></div>
+                <div class="manual-row">
+                  <input type="text" class="input-field" id="manual-id" placeholder="Item ID, e.g. CAM-001" />
+                  <button class="btn btn-primary" onclick="lookupManual()"><i class="ti ti-search"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="result-card" id="result-card">
+              <div class="result-header">
+                <div class="result-icon-wrap" id="result-icon-wrap">
+                  <i class="ti ti-camera" id="result-icon"></i>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div class="result-name" id="result-name">—</div>
+                  <div class="result-id" id="result-id">—</div>
+                </div>
+                <span class="status-pill" id="result-status">—</span>
+              </div>
+              <div class="result-body">
+                <div class="form-row-2">
+                  <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Student name</label>
+                    <input type="text" class="input-field" id="who-input" placeholder="Full name" />
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Class</label>
+                    <input type="text" class="input-field" id="class-input" placeholder="e.g. MMED" />
+                  </div>
+                </div>
+                <div class="result-actions" id="result-actions"></div>
+              </div>
+            </div>
+
+            <div class="result-card" id="kit-result-card">
+              <div class="result-header">
+                <div class="kit-icon-wrap"><i class="ti ti-stack-2"></i></div>
+                <div style="flex:1;min-width:0">
+                  <div class="result-name" id="kit-result-name">—</div>
+                  <div class="result-id" id="kit-result-id">—</div>
+                </div>
+              </div>
+              <div class="result-body">
+                <div class="kit-members" id="kit-result-members"></div>
+                <div class="form-row-2" style="margin-top:14px">
+                  <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Student name</label>
+                    <input type="text" class="input-field" id="kit-who-input" placeholder="Full name" />
+                  </div>
+                  <div>
+                    <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Class</label>
+                    <input type="text" class="input-field" id="kit-class-input" placeholder="e.g. MMED" />
+                  </div>
+                </div>
+                <div class="result-actions" id="kit-result-actions" style="margin-top:10px"></div>
+              </div>
+            </div>
+
+            <div id="quick-items" style="margin-top:0">
+              <!-- recently out items shown here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVENTORY PANEL -->
+      <div class="panel" id="panel-inventory">
+        <div class="stat-row" id="stats-row"></div>
+        <div class="filter-bar" id="filter-bar">
+          <button class="filter-chip active" onclick="setFilter('all')" data-filter="all">All</button>
+          <button class="filter-chip" onclick="setFilter('camera')" data-filter="camera"><i class="ti ti-camera" style="font-size:13px;vertical-align:-2px;margin-right:3px"></i>Cameras</button>
+          <button class="filter-chip" onclick="setFilter('lens')" data-filter="lens">Lenses</button>
+          <button class="filter-chip" onclick="setFilter('memory')" data-filter="memory">Memory cards</button>
+          <button class="filter-chip" onclick="setFilter('case')" data-filter="case">Cases</button>
+          <button class="filter-chip" onclick="setFilter('charger')" data-filter="charger">Chargers</button>
+          <button class="filter-chip" onclick="setFilter('out')" data-filter="out" style="margin-left:auto">Checked out</button>
+        </div>
+        <div class="item-grid" id="item-list"></div>
+      </div>
+
+      <!-- KITS PANEL -->
+      <div class="panel" id="panel-kits">
+        <div class="section-header">
+          <h2>Saved kits</h2>
+          <button class="btn btn-primary btn-sm" onclick="openKitForm()"><i class="ti ti-plus"></i> New kit</button>
+        </div>
+        <div id="kit-list"></div>
+
+        <div class="card-wrap" id="kit-form-wrap" style="display:none;margin-top:18px;max-width:560px">
+          <div class="card-wrap-header"><h2 id="kit-form-title">New kit</h2></div>
+          <div style="padding:20px">
+            <div class="form-block" style="margin-bottom:14px">
+              <label>Kit name</label>
+              <input type="text" class="input-field" id="kit-name" placeholder="e.g. Media kit 1" />
+            </div>
+            <div class="form-block">
+              <label>Items in this kit</label>
+              <div class="kit-check-list" id="kit-check-list"></div>
+            </div>
+            <div class="kit-card-actions" style="margin-top:16px">
+              <button class="btn btn-primary" style="flex:1" onclick="saveKit()"><i class="ti ti-check"></i> Save kit</button>
+              <button class="btn" onclick="closeKitForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOG PANEL -->
+      <div class="panel" id="panel-log">
+        <div class="card-wrap">
+          <div class="card-wrap-header">
+            <h2>Activity log</h2>
+            <button class="btn btn-sm" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
+          </div>
+          <div style="padding:14px 18px;border-bottom:1px solid var(--border)">
+            <div class="log-toolbar">
+              <input type="text" class="input-field" id="log-search" placeholder="Search name, item, or ID…" oninput="renderLog()" />
+              <select class="select-field" id="log-type" onchange="renderLog()">
+                <option value="">All actions</option>
+                <option value="out">Checked out</option>
+                <option value="in">Checked in</option>
+                <option value="missing">Missing</option>
+                <option value="removed">Removed</option>
+              </select>
+              <select class="select-field" id="log-cat" onchange="renderLog()">
+                <option value="">All categories</option>
+                <option value="camera">Cameras</option>
+                <option value="lens">Lenses</option>
+                <option value="memory">Memory cards</option>
+                <option value="case">Cases</option>
+                <option value="charger">Chargers</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-wrap-body">
+            <div class="log-list" id="log-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD ITEM PANEL -->
+      <div class="panel" id="panel-add">
+        <div style="max-width:560px">
+          <div class="card-wrap">
+            <div class="card-wrap-header"><h2>Add new item</h2></div>
+            <div style="padding:20px">
+              <div class="add-grid">
+                <div class="form-block">
+                  <label>Item ID (unique)</label>
+                  <input type="text" class="input-field" id="new-id" placeholder="e.g. CAM-004" />
+                </div>
+                <div class="form-block">
+                  <label>Category</label>
+                  <select class="input-field select-full" id="new-cat">
+                    <option value="camera">Camera</option>
+                    <option value="lens">Lens</option>
+                    <option value="memory">Memory card</option>
+                    <option value="case">Case</option>
+                    <option value="charger">Charger</option>
+                  </select>
+                </div>
+                <div class="form-block add-full">
+                  <label>Name / description</label>
+                  <input type="text" class="input-field" id="new-name" placeholder="e.g. Canon EOS Rebel T8i" />
+                </div>
+                <div class="form-block">
+                  <label>Condition</label>
+                  <select class="input-field select-full" id="new-cond">
+                    <option>Good</option>
+                    <option>Fair</option>
+                    <option>Needs repair</option>
+                  </select>
+                </div>
+                <div class="form-block">
+                  <label>Notes (optional)</label>
+                  <input type="text" class="input-field" id="new-notes" placeholder="Serial #, colour, etc." />
+                </div>
+              </div>
+              <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="addItem()">
+                <i class="ti ti-plus"></i> Add item and generate QR
+              </button>
+            </div>
+          </div>
+
+          <div class="qr-preview-box" id="qr-preview">
+            <div id="qr-canvas"></div>
+            <div class="qr-label-text" id="qr-label-text">—</div>
+            <div class="qr-sublabel">Print and attach to the physical item</div>
+            <button class="btn" style="margin-top:12px" onclick="downloadQR()">
+              <i class="ti ti-download"></i> Download QR label
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETUP PANEL -->
+      <div class="panel instructions" id="panel-setup">
+        <div class="card-wrap" style="max-width:640px">
+          <div class="card-wrap-header"><h2>Connect to Google Sheets</h2></div>
+          <div style="padding:20px">
+            <p style="font-size:13px;color:var(--mid);margin-bottom:16px;line-height:1.7">
+              The app talks to your spreadsheet through a small Google Apps Script web app.
+              It keeps an <strong>Inventory</strong> sheet in sync with every item's status, a
+              <strong>Kits</strong> sheet with your saved equipment bundles, and an
+              <strong>Activity Log</strong> sheet recording every check-out, check-in, and missing report.
+              Follow these steps to set it up — it takes about 5 minutes.
+            </p>
+            <ol class="steps">
+              <li>
+                <div class="step-num">1</div>
+                <div class="step-body">
+                  <h3>Create a Google Sheet</h3>
+                  <p>Go to <a href="https://sheets.google.com" target="_blank">sheets.google.com</a> and create a new, blank spreadsheet. Name it "Media Equipment Log". You don't need to add any headers or columns yourself — the script creates the <strong>Inventory</strong>, <strong>Kits</strong>, and <strong>Activity Log</strong> tabs automatically the first time it runs.</p>
+                </div>
+              </li>
+              <li>
+                <div class="step-num">2</div>
+                <div class="step-body">
+                  <h3>Open Apps Script</h3>
+                  <p>In your sheet, click <strong>Extensions → Apps Script</strong>. Delete any existing code in <code>Code.gs</code> and paste in the script below (this is the <code>code.gs</code> file from the app download — open it and copy everything).</p>
+                </div>
+              </li>
+              <li>
+                <div class="step-num">3</div>
+                <div class="step-body">
+                  <h3>Paste this script</h3>
+                  <pre>function doGet(e) {
+  var action = (e.parameter &amp;&amp; e.parameter.action) || 'inventory';
+  if (action === 'inventory') {
+    return jsonOut({ items: readInventory() });
+  }
+  return jsonOut({ error: 'Unknown action: ' + action });
+}
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    if (data.action === 'sync_item') {
+      upsertInventoryRow(data.item);
+      return jsonOut({ ok: true });
+    }
+    if (data.action === 'bootstrap_inventory') {
+      bootstrapInventory(data.items || []);
+      return jsonOut({ ok: true });
+    }
+    appendLogRow(data); // out / in / missing
+    return jsonOut({ ok: true });
+  } catch(err) {
+    return jsonOut({ error: err.message });
+  }
+}
+
+/* …plus the helper functions for reading and
+   writing the Inventory and Activity Log sheets.
+   See the full code.gs file for the complete script — 
+   it's too long to show here in full, this is just a
+   preview of the two entry points. */</pre>
+                  <p style="margin-top:10px">This is just a preview of the two entry points — paste the <strong>entire contents</strong> of the <code>code.gs</code> file you downloaded with the app, not just what's shown above.</p>
+                </div>
+              </li>
+              <li>
+                <div class="step-num">4</div>
+                <div class="step-body">
+                  <h3>Deploy as a web app</h3>
+                  <p>Click <strong>Deploy → New deployment</strong>. Set type to <strong>Web app</strong>. Set "Execute as" to <strong>Me</strong> and "Who has access" to <strong>Anyone</strong>. Click Deploy and authorise when prompted.</p>
+                </div>
+              </li>
+              <li>
+                <div class="step-num">5</div>
+                <div class="step-body">
+                  <h3>Paste the URL into the HTML file</h3>
+                  <p>Copy the web app URL (looks like <code>https://script.google.com/macros/s/…/exec</code>). Open the app's HTML file in a text editor, find the <code>SHEETS_API_URL</code> constant near the top of the <code>&lt;script&gt;</code> section, and paste the URL between the quotes. Save the file and reload the page — the app will immediately try to load your inventory from the sheet, and since it's empty the first time, it instead pushes your current local inventory up to seed it. The status dot in the sidebar turns green once that's done.</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div><!-- /layout -->
+
+<div id="toast"><i class="ti ti-check" id="toast-icon"></i><span id="toast-msg"></span></div>
+
+<div class="modal-bg" id="delete-modal-bg">
+  <div class="modal">
+    <h2>Remove from inventory</h2>
+    <p id="delete-modal-text">Remove this item?</p>
+    <div class="form-block" style="margin-bottom:18px">
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Reason</label>
+      <select class="input-field select-full" id="delete-reason">
+        <option value="Damaged">Damaged</option>
+        <option value="Broken">Broken</option>
+        <option value="Lost">Lost</option>
+        <option value="Retired">Retired / no longer used</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn" style="background:var(--red);color:white;border-color:var(--red)" onclick="confirmDeleteItem()"><i class="ti ti-trash"></i> Remove item</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   CONFIGURE THIS: paste the Web App URL from your Apps Script deployment.
+   It looks like: https://script.google.com/macros/s/AKfycb..xyz../exec
+   See Code.gs + the setup guide for how to get this.
+   ========================================================================= */
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzzafgAP-OBcaqLj9DrhKiO-NzFTxUrnFn9bYBYsRLZVbfyzyQdLy2OZVrhv5JbL5YG/exec";
+
+/* ── DATA ── */
+var inventory = JSON.parse(localStorage.getItem('cam_inv') || 'null') || [];
+var log = JSON.parse(localStorage.getItem('cam_log') || '[]');
+var kits = JSON.parse(localStorage.getItem('cam_kits') || '[]');
+var currentItem = null;
+var currentKit = null;
+var videoStream = null;
+var scanInterval = null;
+var inventoryFilter = 'all';
+var editingKitId = null;
+
+function tsOffset(m){var d=new Date();d.setMinutes(d.getMinutes()+m);return d.toISOString();}
+function save(){localStorage.setItem('cam_inv',JSON.stringify(inventory));localStorage.setItem('cam_log',JSON.stringify(log));localStorage.setItem('cam_kits',JSON.stringify(kits));}
+
+function fmtTime(iso){
+  if(!iso)return'';
+  var d=new Date(iso),now=new Date(),diff=Math.round((now-d)/60000);
+  if(diff<1)return'Just now';
+  if(diff<60)return diff+'m ago';
+  if(diff<1440)return Math.round(diff/60)+'h ago';
+  if(diff<10080)return Math.round(diff/1440)+'d ago';
+  return d.toLocaleDateString('en-NZ',{day:'numeric',month:'short'});
+}
+
+function catIcon(cat){
+  return{camera:'ti-camera',lens:'ti-eye',memory:'ti-device-sd-card',case:'ti-briefcase',charger:'ti-plug'}[cat]||'ti-package';
+}
+function catClass(cat){
+  return{camera:'ici-camera',lens:'ici-lens',memory:'ici-memory',case:'ici-case',charger:'ici-charger'}[cat]||'';
+}
+
+/* ── NAV ── */
+var tabMeta = {
+  scan: {title:'Scan QR code', sub:'Check equipment in and out'},
+  inventory: {title:'Inventory', sub:'All equipment at a glance'},
+  kits: {title:'Kits', sub:'Group equipment and check it out together'},
+  log: {title:'Activity log', sub:'Full check-out and check-in history'},
+  add: {title:'Add new item', sub:'Register equipment and print a QR label'},
+  setup: {title:'Google Sheets setup', sub:'Two-way sync via Google Apps Script'}
+};
+
+function switchTab(t){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('panel-'+t).classList.add('active');
+  document.getElementById('nav-'+t) && document.getElementById('nav-'+t).classList.add('active');
+  document.getElementById('topbar-title').textContent = tabMeta[t].title;
+  document.getElementById('topbar-sub').textContent = tabMeta[t].sub;
+  if(t !== 'scan') stopCamera();
+  if(t === 'scan') populateKitSelect();
+  if(t === 'inventory') renderInventory();
+  if(t === 'kits') renderKits();
+  if(t === 'log') renderLog();
+  closeSidebar();
+}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/* ── STATS ── */
+function renderStats(){
+  var cats = ['camera','lens','memory','case','charger'];
+  var labels = ['Cameras','Lenses','Mem cards','Cases','Chargers'];
+  var icons = ['ti-camera','ti-eye','ti-device-sd-card','ti-briefcase','ti-plug'];
+  var iconCls = ['cam','lens','mem','case','chg'];
+  var row = document.getElementById('stats-row');
+  row.innerHTML = '';
+  var totalAvail = 0, totalAll = 0;
+  cats.forEach(function(c,i){
+    var items = inventory.filter(function(x){return x.category===c;});
+    var avail = items.filter(function(x){return x.status==='in';}).length;
+    totalAvail += avail; totalAll += items.length;
+    var low = avail===0&&items.length>0;
+    row.innerHTML += '<div class="stat-card">'+
+      '<div class="stat-icon '+iconCls[i]+'"><i class="ti '+icons[i]+'"></i></div>'+
+      '<div class="stat-num">'+avail+'</div>'+
+      '<div class="stat-lbl">'+labels[i]+'</div>'+
+      '<div class="stat-avail '+(low?'avail-low':'avail-ok')+'">'+avail+'/'+items.length+' available</div>'+
+      '</div>';
+  });
+  var nb = document.getElementById('nav-avail-count');
+  if(nb) nb.textContent = totalAvail+'/'+totalAll;
+}
+
+/* ── INVENTORY ── */
+function setFilter(f){
+  inventoryFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(function(c){
+    c.classList.toggle('active', c.dataset.filter===f);
+  });
+  renderInventory();
+}
+
+function renderInventory(){
+  renderStats();
+  var items = inventory.filter(function(x){
+    if(inventoryFilter==='all') return true;
+    if(inventoryFilter==='out') return x.status==='out'||x.status==='missing';
+    return x.category===inventoryFilter;
+  });
+  var list = document.getElementById('item-list');
+  if(!items.length){
+    list.innerHTML='<div class="empty"><i class="ti ti-package"></i><p>No items match this filter.</p></div>';
+    return;
+  }
+  list.innerHTML = items.map(function(item){
+    var sp = item.status==='in'
+      ? '<span class="status-pill s-in">In</span>'
+      : item.status==='missing'
+      ? '<span class="status-pill s-missing">Missing</span>'
+      : '<span class="status-pill s-out">Checked out</span>';
+    var who = item.status==='out'&&item.lastWho
+      ? '<div class="item-who"><i class="ti ti-user" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>'+item.lastWho+(item.lastClass?' · '+item.lastClass:'')+(item.lastTime?' · '+fmtTime(item.lastTime):'')+'</div>'
+      : '';
+    var actBtn = item.status==='out'
+      ? '<button class="btn btn-in btn-sm" onclick="quickAction(\''+item.id+'\',\'in\')"><i class="ti ti-arrow-back-up"></i> <span>Check in</span></button>'
+      : item.status==='in'
+      ? '<button class="btn btn-out btn-sm" onclick="quickAction(\''+item.id+'\',\'out\')"><i class="ti ti-arrow-right"></i> <span>Check out</span></button>'
+      : '<button class="btn btn-sm" onclick="quickAction(\''+item.id+'\',\'in\')"><i class="ti ti-arrow-back-up"></i> <span>Found</span></button>';
+    return '<div class="item-card">'+
+      '<div class="item-cat-icon '+catClass(item.category)+'"><i class="ti '+catIcon(item.category)+'"></i></div>'+
+      '<div class="item-info">'+
+        '<div class="item-name">'+item.name+'</div>'+
+        '<div class="item-meta">'+item.id+' · '+item.condition+(item.notes?' · '+item.notes:'')+'</div>'+
+        who+
+      '</div>'+
+      sp+
+      '<div class="item-actions">'+
+        '<button class="btn btn-icon btn-sm" onclick="printQR(\''+item.id+'\')" title="Print QR label"><i class="ti ti-qrcode"></i></button>'+
+        actBtn+
+        '<button class="btn btn-icon btn-sm" onclick="deleteItem(\''+item.id+'\')" title="Remove from inventory" style="color:var(--red)"><i class="ti ti-trash"></i></button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+/* ── LOG ── */
+function renderLog(){
+  var search = (document.getElementById('log-search').value||'').toLowerCase();
+  var type = document.getElementById('log-type').value;
+  var cat = document.getElementById('log-cat').value;
+  var filtered = log.filter(function(e){
+    if(type && e.action!==type) return false;
+    if(cat && e.category!==cat) return false;
+    if(search && !(
+      e.itemName.toLowerCase().includes(search)||
+      (e.who||'').toLowerCase().includes(search)||
+      e.itemId.toLowerCase().includes(search)
+    )) return false;
+    return true;
+  }).slice().reverse();
+
+  var el = document.getElementById('log-list');
+  if(!filtered.length){
+    el.innerHTML='<div class="empty"><i class="ti ti-history"></i><p>'+(log.length?'No entries match the filter.':'No activity yet. Check out some equipment first.')+'</p></div>';
+    return;
+  }
+  el.innerHTML = filtered.map(function(e){
+    var dotCls = e.action==='out'?'ld-out':e.action==='missing'?'ld-miss':e.action==='removed'?'ld-miss':'ld-in';
+    var icon = e.action==='out'?'ti-arrow-right':e.action==='missing'?'ti-alert-triangle':e.action==='removed'?'ti-trash':'ti-arrow-back-up';
+    var label = e.action==='out'?'Checked out to ':e.action==='missing'?'Reported missing by ':e.action==='removed'?'Removed from inventory — reason: ':'Returned by ';
+    return '<div class="log-entry">'+
+      '<div class="log-dot '+dotCls+'"><i class="ti '+icon+'"></i></div>'+
+      '<div class="log-body">'+
+        '<div class="log-item-name">'+e.itemName+'</div>'+
+        '<div class="log-detail">'+label+(e.who||'—')+(e.class?' · '+e.class:'')+' · '+e.itemId+'</div>'+
+      '</div>'+
+      '<div class="log-time">'+fmtTime(e.time)+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function exportCSV(){
+  var rows = [['Timestamp','Action','Item ID','Item Name','Category','Person','Class']];
+  log.forEach(function(e){
+    rows.push([new Date(e.time).toLocaleString(),e.action,e.itemId,e.itemName,e.category,e.who||'',e.class||'']);
+  });
+  var csv = rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'equipment-log-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showToast('CSV exported','ti-download',false);
+}
+
+/* ── SCAN ── */
+function toggleCamera(){
+  if(videoStream){stopCamera();return;}
+  startCamera();
+}
+
+function startCamera(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    showToast('Camera not available in this browser','ti-x',true);return;
+  }
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(function(stream){
+    videoStream = stream;
+    var v = document.getElementById('video');
+    v.srcObject = stream;
+    document.getElementById('video-wrap').style.display='block';
+    document.getElementById('scan-zone').style.display='none';
+    document.getElementById('scan-title').textContent='Scanning…';
+    scanInterval = setInterval(scanFrame,200);
+  }).catch(function(){
+    showToast('Camera access denied. Check browser permissions.','ti-x',true);
+  });
+}
+
+function stopCamera(){
+  if(videoStream){videoStream.getTracks().forEach(function(t){t.stop();});videoStream=null;}
+  clearInterval(scanInterval);scanInterval=null;
+  var vw=document.getElementById('video-wrap');
+  if(vw)vw.style.display='none';
+  var sz=document.getElementById('scan-zone');
+  if(sz)sz.style.display='';
+}
+
+function scanFrame(){
+  var v=document.getElementById('video');
+  if(!v||v.readyState<2||!v.videoWidth)return;
+  var c=document.createElement('canvas');
+  c.width=v.videoWidth;c.height=v.videoHeight;
+  var ctx=c.getContext('2d');
+  ctx.drawImage(v,0,0);
+  var img=ctx.getImageData(0,0,c.width,c.height);
+  var code;
+  try{code=jsQR(img.data,img.width,img.height);}catch(e){return;}
+  if(code&&code.data){
+    stopCamera();
+    var item=inventory.find(function(x){return x.id===code.data.trim().toUpperCase();});
+    if(item){showResultCard(item);}
+    else{showToast('No item found for QR: '+code.data,'ti-alert-triangle',true);}
+  }
+}
+
+function lookupManual(){
+  var id=document.getElementById('manual-id').value.trim().toUpperCase();
+  if(!id){showToast('Enter an item ID first','ti-alert-triangle',true);return;}
+  var item=inventory.find(function(x){return x.id===id;});
+  if(!item){showToast('No item with ID "'+id+'"','ti-x',true);return;}
+  document.getElementById('manual-id').value='';
+  showResultCard(item);
+}
+
+function showResultCard(item){
+  currentItem=item;
+  document.getElementById('kit-result-card').classList.remove('visible');
+  currentKit=null;
+  var card=document.getElementById('result-card');
+  card.classList.add('visible');
+  var iw=document.getElementById('result-icon-wrap');
+  iw.className='result-icon-wrap '+catClass(item.category);
+  document.getElementById('result-icon').className='ti '+catIcon(item.category);
+  document.getElementById('result-name').textContent=item.name;
+  document.getElementById('result-id').textContent=item.id+' · '+item.condition;
+  var sp=document.getElementById('result-status');
+  sp.textContent=item.status==='in'?'Available':item.status==='missing'?'Missing':'Checked out';
+  sp.className='status-pill '+(item.status==='in'?'s-in':item.status==='missing'?'s-missing':'s-out');
+  document.getElementById('who-input').value='';
+  document.getElementById('class-input').value='';
+  var ra=document.getElementById('result-actions');
+  if(item.status==='in'){
+    ra.innerHTML='<button class="btn btn-out" style="flex:1" onclick="doAction(\'out\')"><i class="ti ti-arrow-right"></i> Check out</button>';
+  } else {
+    ra.innerHTML=
+      '<button class="btn btn-in" style="flex:1" onclick="doAction(\'in\')"><i class="ti ti-arrow-back-up"></i> Check in</button>'+
+      '<button class="btn" onclick="doAction(\'missing\')"><i class="ti ti-alert-triangle"></i> Missing</button>';
+  }
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function doAction(action){
+  if(!currentItem)return;
+  var who=document.getElementById('who-input').value.trim();
+  var cls=document.getElementById('class-input').value.trim();
+  if(action==='out'&&!who){showToast('Enter a name before checking out','ti-alert-triangle',true);return;}
+  var now=new Date().toISOString();
+  var item=inventory.find(function(x){return x.id===currentItem.id;});
+  if(action==='out'){item.status='out';item.lastWho=who;item.lastClass=cls;item.lastTime=now;}
+  else if(action==='in'){item.status='in';item.lastWho=who||item.lastWho;item.lastClass=cls||item.lastClass;item.lastTime=now;}
+  else{item.status='missing';item.lastTime=now;}
+  var entry={action:action,itemId:item.id,itemName:item.name,category:item.category,who:who||item.lastWho,class:cls||item.lastClass,time:now};
+  log.push(entry);
+  save();
+  pushToSheets(entry);
+  syncItemToSheets(item);
+  document.getElementById('result-card').classList.remove('visible');
+  currentItem=null;
+  var msg=action==='out'?item.name+' checked out to '+who
+    :action==='in'?item.name+' checked in'
+    :'Item marked as missing';
+  showToast(msg,action==='out'?'ti-arrow-right':action==='in'?'ti-check':'ti-alert-triangle',action==='missing');
+}
+
+function quickAction(id,action){
+  var item=inventory.find(function(x){return x.id===id;});
+  if(!item)return;
+  if(action==='out'){
+    var who=prompt('Student name:');
+    if(who===null)return;
+    who=who.trim();
+    if(!who){showToast('A name is required to check out','ti-alert-triangle',true);return;}
+    var cls=prompt('Class (press OK to skip):');
+    var now=new Date().toISOString();
+    item.status='out';item.lastWho=who;item.lastClass=cls||'';item.lastTime=now;
+    var entry={action:'out',itemId:item.id,itemName:item.name,category:item.category,who:who,class:cls||'',time:now};
+    log.push(entry);save();pushToSheets(entry);syncItemToSheets(item);
+    showToast(item.name+' checked out to '+who,'ti-arrow-right',false);
+  } else {
+    var now2=new Date().toISOString();
+    item.status='in';item.lastTime=now2;
+    var entry2={action:'in',itemId:item.id,itemName:item.name,category:item.category,who:item.lastWho,class:item.lastClass,time:now2};
+    log.push(entry2);save();pushToSheets(entry2);syncItemToSheets(item);
+    showToast(item.name+' checked in','ti-check',false);
+  }
+  renderInventory();
+}
+
+/* ── ADD ITEM ── */
+function addItem(){
+  var id=document.getElementById('new-id').value.trim().toUpperCase();
+  var name=document.getElementById('new-name').value.trim();
+  var cat=document.getElementById('new-cat').value;
+  var cond=document.getElementById('new-cond').value;
+  var notes=document.getElementById('new-notes').value.trim();
+  if(!id){showToast('Enter an item ID','ti-alert-triangle',true);return;}
+  if(!name){showToast('Enter an item name','ti-alert-triangle',true);return;}
+  if(inventory.find(function(x){return x.id===id;})){showToast('ID "'+id+'" already exists','ti-x',true);return;}
+  inventory.push({id:id,name:name,category:cat,status:'in',condition:cond,notes:notes,lastWho:'',lastClass:'',lastTime:''});
+  save();
+  syncItemToSheets(inventory[inventory.length-1]);
+  showToast(name+' added to inventory','ti-check',false);
+  generateQR(id,name);
+  document.getElementById('new-id').value='';
+  document.getElementById('new-name').value='';
+  document.getElementById('new-notes').value='';
+}
+
+/* ── DELETE ITEM (damaged / broken / lost) ── */
+var pendingDeleteId = null;
+
+function deleteItem(id){
+  var item=inventory.find(function(x){return x.id===id;});
+  if(!item)return;
+  pendingDeleteId=id;
+  document.getElementById('delete-modal-text').textContent=
+    'Remove "'+item.name+'" ('+item.id+') from the inventory? This can\'t be undone — if it\'s part of any kits, it will be removed from those too.';
+  document.getElementById('delete-reason').value='Damaged';
+  document.getElementById('delete-modal-bg').classList.add('open');
+}
+
+function closeDeleteModal(){
+  pendingDeleteId=null;
+  document.getElementById('delete-modal-bg').classList.remove('open');
+}
+
+function confirmDeleteItem(){
+  if(!pendingDeleteId)return;
+  var item=inventory.find(function(x){return x.id===pendingDeleteId;});
+  if(!item){closeDeleteModal();return;}
+  var reason=document.getElementById('delete-reason').value;
+
+  // Log the removal before it disappears from inventory.
+  var entry={action:'removed',itemId:item.id,itemName:item.name,category:item.category,who:reason,class:'',time:new Date().toISOString()};
+  log.push(entry);
+  pushToSheets(entry);
+
+  // Remove from inventory and from any kits referencing it.
+  inventory=inventory.filter(function(x){return x.id!==item.id;});
+  kits.forEach(function(kit){
+    var before=kit.itemIds.length;
+    kit.itemIds=kit.itemIds.filter(function(iid){return iid!==item.id;});
+    if(kit.itemIds.length!==before)syncKitToSheets(kit);
+  });
+
+  save();
+  deleteItemFromSheets(item.id);
+  closeDeleteModal();
+  renderInventory();
+  if(document.getElementById('panel-kits').classList.contains('active'))renderKits();
+  populateKitSelect();
+  showToast(item.name+' removed ('+reason.toLowerCase()+')','ti-trash',true);
+}
+
+/* ── KITS ── */
+function genKitId(){
+  return 'KIT-'+Date.now().toString(36).toUpperCase();
+}
+
+function kitItems(kit){
+  return kit.itemIds.map(function(id){return inventory.find(function(x){return x.id===id;});}).filter(Boolean);
+}
+
+function kitStatusSummary(kit){
+  var items=kitItems(kit);
+  if(!items.length)return{label:'Empty kit',cls:''};
+  var out=items.filter(function(x){return x.status==='out';}).length;
+  var missing=items.filter(function(x){return x.status==='missing';}).length;
+  if(missing)return{label:missing+' missing',cls:'s-missing'};
+  if(out===items.length)return{label:'All checked out',cls:'s-out'};
+  if(out>0)return{label:out+'/'+items.length+' out',cls:'s-out'};
+  return{label:'All available',cls:'s-in'};
+}
+
+function renderKits(){
+  var list=document.getElementById('kit-list');
+  if(!kits.length){
+    list.innerHTML='<div class="empty"><i class="ti ti-stack-2"></i><p>No kits yet. Create one to bundle items you check out together.</p></div>';
+    return;
+  }
+  list.innerHTML=kits.map(function(kit){
+    var items=kitItems(kit);
+    var summary=kitStatusSummary(kit);
+    var anyAvail=items.some(function(x){return x.status==='in';});
+    var anyOut=items.some(function(x){return x.status==='out'||x.status==='missing';});
+    var chips=items.map(function(x){
+      var cls=x.status==='out'?'m-out':x.status==='missing'?'m-missing':'';
+      return '<span class="kit-member-chip '+cls+'"><i class="ti '+catIcon(x.category)+'" style="font-size:12px"></i>'+x.name+'</span>';
+    }).join('')||'<span class="kit-meta">No items added yet</span>';
+    return '<div class="kit-card">'+
+      '<div class="kit-card-top">'+
+        '<div class="kit-icon-wrap"><i class="ti ti-stack-2"></i></div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div class="kit-name">'+kit.name+'</div>'+
+          '<div class="kit-meta">'+items.length+' item'+(items.length===1?'':'s')+' · <span class="'+(summary.cls?'':'avail-ok')+'">'+summary.label+'</span></div>'+
+        '</div>'+
+        '<button class="btn btn-icon btn-sm" onclick="editKit(\''+kit.id+'\')" title="Edit kit"><i class="ti ti-pencil"></i></button>'+
+        '<button class="btn btn-icon btn-sm" onclick="deleteKit(\''+kit.id+'\')" title="Delete kit"><i class="ti ti-trash"></i></button>'+
+      '</div>'+
+      '<div class="kit-members">'+chips+'</div>'+
+      '<div class="kit-card-actions">'+
+        (anyAvail?'<button class="btn btn-out btn-sm" style="flex:1" onclick="promptKitAction(\''+kit.id+'\',\'out\')"><i class="ti ti-arrow-right"></i> Check out kit</button>':'')+
+        (anyOut?'<button class="btn btn-in btn-sm" style="flex:1" onclick="promptKitAction(\''+kit.id+'\',\'in\')"><i class="ti ti-arrow-back-up"></i> Check in kit</button>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function openKitForm(kit){
+  editingKitId=kit?kit.id:null;
+  document.getElementById('kit-form-title').textContent=kit?'Edit kit':'New kit';
+  document.getElementById('kit-name').value=kit?kit.name:'';
+  renderKitCheckList(kit?kit.itemIds:[]);
+  document.getElementById('kit-form-wrap').style.display='block';
+  document.getElementById('kit-form-wrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeKitForm(){
+  editingKitId=null;
+  document.getElementById('kit-form-wrap').style.display='none';
+}
+
+function renderKitCheckList(selectedIds){
+  selectedIds=selectedIds||[];
+  var wrap=document.getElementById('kit-check-list');
+  if(!inventory.length){
+    wrap.innerHTML='<div class="kit-check-row">No items in inventory yet.</div>';
+    return;
+  }
+  wrap.innerHTML=inventory.map(function(item){
+    var checked=selectedIds.indexOf(item.id)>-1?' checked':'';
+    return '<label class="kit-check-row">'+
+      '<input type="checkbox" value="'+item.id+'"'+checked+' />'+
+      '<span class="kc-name">'+item.name+'</span>'+
+      '<span class="kc-id">'+item.id+'</span>'+
+    '</label>';
+  }).join('');
+}
+
+function saveKit(){
+  var name=document.getElementById('kit-name').value.trim();
+  if(!name){showToast('Enter a kit name','ti-alert-triangle',true);return;}
+  var checked=Array.prototype.slice.call(document.querySelectorAll('#kit-check-list input:checked')).map(function(c){return c.value;});
+  if(!checked.length){showToast('Select at least one item for the kit','ti-alert-triangle',true);return;}
+
+  if(editingKitId){
+    var kit=kits.find(function(k){return k.id===editingKitId;});
+    kit.name=name;
+    kit.itemIds=checked;
+    syncKitToSheets(kit);
+    showToast('Kit "'+name+'" updated','ti-check',false);
+  } else {
+    var newKit={id:genKitId(),name:name,itemIds:checked};
+    kits.push(newKit);
+    syncKitToSheets(newKit);
+    showToast('Kit "'+name+'" created','ti-check',false);
+  }
+  save();
+  closeKitForm();
+  renderKits();
+  populateKitSelect();
+}
+
+function editKit(id){
+  var kit=kits.find(function(k){return k.id===id;});
+  if(kit)openKitForm(kit);
+}
+
+function deleteKit(id){
+  var kit=kits.find(function(k){return k.id===id;});
+  if(!kit)return;
+  if(!confirm('Delete kit "'+kit.name+'"? This only removes the kit grouping — the items themselves stay in inventory.'))return;
+  kits=kits.filter(function(k){return k.id!==id;});
+  save();
+  deleteKitFromSheets(id);
+  renderKits();
+  populateKitSelect();
+  showToast('Kit deleted','ti-check',false);
+}
+
+/* Quick check-out/in from the Kits tab card (prompts for name like quickAction does) */
+function promptKitAction(id,action){
+  var kit=kits.find(function(k){return k.id===id;});
+  if(!kit)return;
+  if(action==='out'){
+    var who=prompt('Student name:');
+    if(who===null)return;
+    who=who.trim();
+    if(!who){showToast('A name is required to check out','ti-alert-triangle',true);return;}
+    var cls=prompt('Class (press OK to skip):');
+    applyKitAction(kit,'out',who,cls||'');
+  } else {
+    applyKitAction(kit,'in','','');
+  }
+}
+
+/* Used by the Scan tab's kit result card */
+function doKitAction(action){
+  if(!currentKit)return;
+  var who=document.getElementById('kit-who-input').value.trim();
+  var cls=document.getElementById('kit-class-input').value.trim();
+  if(action==='out'&&!who){showToast('Enter a name before checking out','ti-alert-triangle',true);return;}
+  applyKitAction(currentKit,action,who,cls);
+  document.getElementById('kit-result-card').classList.remove('visible');
+  currentKit=null;
+}
+
+/* Applies an action to every member item of a kit individually,
+   reusing the same per-item log + sheet sync as single-item actions. */
+function applyKitAction(kit,action,who,cls){
+  var items=kitItems(kit);
+  var targets=items.filter(function(x){
+    return action==='out'?x.status==='in':(x.status==='out'||x.status==='missing');
+  });
+  if(!targets.length){
+    showToast('No items in this kit need '+(action==='out'?'checking out':'checking in'),'ti-alert-triangle',true);
+    return;
+  }
+  var now=new Date().toISOString();
+  targets.forEach(function(item){
+    if(action==='out'){item.status='out';item.lastWho=who;item.lastClass=cls;item.lastTime=now;}
+    else{item.status='in';item.lastWho=who||item.lastWho;item.lastClass=cls||item.lastClass;item.lastTime=now;}
+    var entry={action:action,itemId:item.id,itemName:item.name,category:item.category,who:who||item.lastWho,class:cls||item.lastClass,time:now};
+    log.push(entry);
+    pushToSheets(entry);
+    syncItemToSheets(item);
+  });
+  save();
+  renderInventory();
+  if(document.getElementById('panel-kits').classList.contains('active'))renderKits();
+  var msg=action==='out'
+    ?kit.name+' checked out to '+who+' ('+targets.length+' item'+(targets.length===1?'':'s')+')'
+    :kit.name+' checked in ('+targets.length+' item'+(targets.length===1?'':'s')+')';
+  showToast(msg,action==='out'?'ti-arrow-right':'ti-check',false);
+}
+
+function populateKitSelect(){
+  var sel=document.getElementById('scan-kit-select');
+  if(!sel)return;
+  var current=sel.value;
+  sel.innerHTML='<option value="">Choose a kit…</option>'+
+    kits.map(function(k){return '<option value="'+k.id+'">'+k.name+' ('+k.itemIds.length+' items)</option>';}).join('');
+  if(kits.find(function(k){return k.id===current;}))sel.value=current;
+}
+
+function scanKitLookup(){
+  var id=document.getElementById('scan-kit-select').value;
+  if(!id){showToast('Choose a kit first','ti-alert-triangle',true);return;}
+  var kit=kits.find(function(k){return k.id===id;});
+  if(!kit)return;
+  showKitResultCard(kit);
+}
+
+function showKitResultCard(kit){
+  currentKit=kit;
+  document.getElementById('result-card').classList.remove('visible');
+  var card=document.getElementById('kit-result-card');
+  card.classList.add('visible');
+  document.getElementById('kit-result-name').textContent=kit.name;
+  var items=kitItems(kit);
+  document.getElementById('kit-result-id').textContent=items.length+' item'+(items.length===1?'':'s')+' in this kit';
+  document.getElementById('kit-result-members').innerHTML=items.map(function(x){
+    var cls=x.status==='out'?'m-out':x.status==='missing'?'m-missing':'';
+    return '<span class="kit-member-chip '+cls+'"><i class="ti '+catIcon(x.category)+'" style="font-size:12px"></i>'+x.name+'</span>';
+  }).join('');
+  document.getElementById('kit-who-input').value='';
+  document.getElementById('kit-class-input').value='';
+  var anyAvail=items.some(function(x){return x.status==='in';});
+  var anyOut=items.some(function(x){return x.status==='out'||x.status==='missing';});
+  var ra=document.getElementById('kit-result-actions');
+  var html='';
+  if(anyAvail)html+='<button class="btn btn-out" style="flex:1" onclick="doKitAction(\'out\')"><i class="ti ti-arrow-right"></i> Check out kit</button>';
+  if(anyOut)html+='<button class="btn btn-in" style="flex:1" onclick="doKitAction(\'in\')"><i class="ti ti-arrow-back-up"></i> Check in kit</button>';
+  ra.innerHTML=html;
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function generateQR(id,name){
+  var preview=document.getElementById('qr-preview');
+  var canvasWrap=document.getElementById('qr-canvas');
+  canvasWrap.innerHTML='';
+  preview.classList.add('show');
+  document.getElementById('qr-label-text').textContent=id+' — '+name;
+  if(typeof QRCode!=='undefined'){
+    var canvas=document.createElement('canvas');
+    canvasWrap.appendChild(canvas);
+    try{new QRCode(canvas,{text:id,width:180,height:180,colorDark:'#0f172a',colorLight:'#ffffff'});}
+    catch(e){canvasWrap.textContent='QR: '+id;}
+  }
+}
+
+function downloadQR(){
+  var c=document.querySelector('#qr-canvas canvas');
+  if(!c){showToast('Generate a QR code first','ti-alert-triangle',true);return;}
+  var a=document.createElement('a');
+  var lbl=document.getElementById('qr-label-text').textContent.replace(/[^a-z0-9]/gi,'-').toLowerCase();
+  a.href=c.toDataURL('image/png');
+  a.download=lbl+'-qr.png';
+  a.click();
+}
+
+function printQR(id){
+  var item=inventory.find(function(x){return x.id===id;});
+  if(!item)return;
+  switchTab('add');
+  setTimeout(function(){generateQR(item.id,item.name);},150);
+}
+
+/* ── SHEETS SYNC (via Google Apps Script web app — see Code.gs) ── */
+function sheetUrl(){
+  return SHEETS_API_URL.trim();
+}
+
+function setSyncStatus(state,text){
+  var dot=document.getElementById('sync-dot');
+  var txt=document.getElementById('sync-text');
+  if(dot)dot.className='sync-dot'+(state?' '+state:'');
+  if(txt)txt.textContent=text;
+}
+
+/* Logs one check-out/in/missing event as a new Activity Log row. */
+async function pushToSheets(entry){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:entry.action,itemId:entry.itemId,itemName:entry.itemName,category:entry.category,who:entry.who,class:entry.class,time:entry.time})
+    });
+    setSyncStatus('ok','Synced to Sheets');
+  }catch(err){
+    setSyncStatus('err','Sync failed');
+  }
+}
+
+/* Upserts one item's current state into the Inventory sheet row. */
+async function syncItemToSheets(item){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'sync_item',item:item})
+    });
+    setSyncStatus('ok','Synced to Sheets');
+  }catch(err){
+    setSyncStatus('err','Sync failed');
+  }
+}
+
+/* One-time bulk write so a brand-new sheet starts populated, instead
+   of waiting for items to trickle in one check-out at a time. */
+async function bootstrapSheets(){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'bootstrap_inventory',items:inventory})
+    });
+    if(kits.length){
+      await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'bootstrap_kits',kits:kits})
+      });
+    }
+  }catch(err){ /* silent — next sync attempt will retry naturally */ }
+}
+
+/* Upserts one kit's current state into the Kits sheet row. */
+async function syncKitToSheets(kit){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'sync_kit',kit:kit})
+    });
+    setSyncStatus('ok','Synced to Sheets');
+  }catch(err){
+    setSyncStatus('err','Sync failed');
+  }
+}
+
+/* Removes a kit's row from the Kits sheet. */
+async function deleteKitFromSheets(kitId){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'delete_kit',kitId:kitId})
+    });
+  }catch(err){ /* silent */ }
+}
+
+/* Removes an item's row from the Inventory sheet (e.g. damaged/broken/lost). */
+async function deleteItemFromSheets(itemId){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'delete_item',itemId:itemId})
+    });
+  }catch(err){ /* silent */ }
+}
+
+/* Pulls the Inventory sheet down and merges it into local state.
+   Sheet data wins on overlapping fields, so multiple devices stay
+   in sync with whatever was checked in/out elsewhere. */
+async function loadFromSheets(){
+  var url=sheetUrl();
+  if(!url)return;
+  setSyncStatus('','Loading from Sheets…');
+  try{
+    var res=await fetch(url+(url.indexOf('?')>-1?'&':'?')+'action=inventory');
+    var data=await res.json();
+    if(data.error)throw new Error(data.error);
+    var remote=data.items||[];
+    var remoteKits=data.kits||[];
+    var seeded=false;
+    if(remote.length){
+      inventory=remote;
+      save();
+      renderInventory();
+      if(typeof renderLog==='function')renderLog();
+    } else {
+      seeded=true;
+    }
+    if(remoteKits.length){
+      kits=remoteKits;
+      save();
+      if(document.getElementById('panel-kits').classList.contains('active'))renderKits();
+      populateKitSelect();
+    } else if(kits.length){
+      seeded=true;
+    }
+    if(seeded){
+      // Empty sheet (inventory and/or kits) — push what we have locally to seed it.
+      bootstrapSheets();
+    }
+    setSyncStatus('ok','Synced to Sheets');
+  }catch(err){
+    setSyncStatus('err','Could not load from Sheets');
+  }
+}
+
+(function initSheets(){
+  if(sheetUrl()){
+    setSyncStatus('','Loading from Sheets…');
+    loadFromSheets();
+  } else {
+    setSyncStatus('','Not connected — set SHEETS_API_URL');
+  }
+})();
+
+/* ── TOAST ── */
+function showToast(msg,icon,err){
+  var t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-icon').className='ti '+(icon||'ti-check');
+  t.style.background=err?'#b91c1c':'var(--ink)';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(function(){t.classList.remove('show');},3200);
+}
+
+/* ── INIT ── */
+renderStats();
+populateKitSelect();
+</script>
+</body>
+</html>
