@@ -1159,7 +1159,7 @@ function fmtTime(iso){
 }
 
 function catIcon(cat){
-  return{camera:'ti-camera',lens:'ti-eye',memory:'ti-device-sd-card',case:'ti-briefcase',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone', tripod:'ti-camera-tripod'}[cat]||'ti-package';
+  return{camera:'ti-camera',lens:'ti-eye',memory:'ti-device-sd-card',case:'ti-briefcase',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone', tripod:'ti-viewfinder'}[cat]||'ti-package';
 }
 function catClass(cat){
   return{camera:'ici-camera',lens:'ici-lens',memory:'ici-memory',case:'ici-case',charger:'ici-charger',battery:'ici-battery',microphone:'ici-microphone', tripod:'ici-tripod'}[cat]||'';
@@ -1206,7 +1206,7 @@ function closeSidebar(){
 function renderStats(){
   var cats = ['camera','lens','memory','case','charger','battery','microphone','tripod'];
   var labels = ['Cameras','Lenses','Memory cards','Cases','Chargers','Batteries','Microphones','Tripods'];
-  var icons = ['ti-camera','ti-eye','ti-device-sd-card','ti-briefcase','ti-plug','ti-battery-2','ti-microphone','ti-camera-tripod'];
+  var icons = ['ti-camera','ti-eye','ti-device-sd-card','ti-briefcase','ti-plug','ti-battery-2','ti-microphone','ti-viewfinder'];
   var iconCls = ['cam','lens','mem','case','chg','bat','mic','tri'];
   var row = document.getElementById('stats-row');
   row.innerHTML = '';
