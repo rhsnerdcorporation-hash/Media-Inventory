@@ -269,6 +269,10 @@
   .stat-card.active-mic  .stat-num, .stat-card.active-mic  .stat-lbl { color: #6d28d9; }
   .stat-card.active-mic  .stat-avail { color: #7c3aed; }
 
+  .stat-card.active-tri  { background: #ede9fe; border-color: #a78bfa; }
+  .stat-card.active-tri  .stat-num, .stat-card.active-tri  .stat-lbl { color: #6d28d9; }
+  .stat-card.active-tri  .stat-avail { color: #7c3aed; }
+
   .stat-icon-all { background: #e8e8ec; }
   .stat-icon-all i { color: #606068; }
   .stat-card.active-all { background: #a8a8b0; border-color: #83838c; }
@@ -290,6 +294,7 @@
   .stat-icon.chg { background: #fce7f3; } .stat-icon.chg i { color: #db2777; }
   .stat-icon.bat { background: #ffedd5; } .stat-icon.bat i { color: #c2410c; }
   .stat-icon.mic { background: #ede9fe; } .stat-icon.mic i { color: #6d28d9; }
+  .stat-icon.tri { background: #ede9fe; } .stat-icon.mic i { color: #6d28d9; }
   .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--ink); }
   .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .stat-avail { font-size: 11px; margin-top: 4px; font-weight: 500; }
@@ -329,6 +334,7 @@
   .ici-charger { background: #fce7f3; } .ici-charger i { color: #db2777; }
   .ici-battery { background: #ffedd5; } .ici-battery i { color: #c2410c; }
   .ici-microphone { background: #f5f3ff; } .ici-microphone i { color: #7c3aed; }
+  .ici-tripod { background: #f5f3ff; } .ici-microphone i { color: #7c3aed; }
 
   .item-info { flex: 1; min-width: 0; }
   .item-name { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -740,6 +746,7 @@
   .cat-charger { background: #fce7f3; color: #db2777; }
   .cat-battery { background: #ecfdf5; color: #059669; }
   .cat-microphone { background: #f5f3ff; color: #7c3aed; }
+  .cat-tripod { background: #f5f3ff; color: #7c3aed; }
 
   .cond-pill {
     font-size: 11px; font-weight: 500; padding: 2px 8px;
@@ -963,6 +970,7 @@
           <button class="filter-chip" onclick="setFilter('charger')" data-filter="charger">Chargers</button>
           <button class="filter-chip" onclick="setFilter('battery')" data-filter="battery">Batteries</button>
           <button class="filter-chip" onclick="setFilter('microphone')" data-filter="microphone">Microphones</button>
+          <button class="filter-chip" onclick="setFilter('tripod')" data-filter="microphone">Tripods</button>
           <button class="filter-chip" onclick="setFilter('out')" data-filter="out" style="margin-left:auto">Checked out</button>
         </div>
         <div class="item-grid" id="item-list"></div>
@@ -1024,6 +1032,7 @@
                 <option value="charger">Chargers</option>
                 <option value="battery">Batteries</option>
                 <option value="microphone">Microphones</option>
+                <option value="tripod">Tripods</option>
               </select>
             </div>
           </div>
@@ -1054,6 +1063,7 @@
                     <option value="charger">Charger</option>
                     <option value="battery">Battery</option>
                     <option value="microphone">Microphone</option>
+                    <option value="tripod">Tripod</option>
                   </select>
                 </div>
                 <div class="form-block add-full">
@@ -1149,10 +1159,10 @@ function fmtTime(iso){
 }
 
 function catIcon(cat){
-  return{camera:'ti-camera',lens:'ti-eye',memory:'ti-device-sd-card',case:'ti-briefcase',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone'}[cat]||'ti-package';
+  return{camera:'ti-camera',lens:'ti-eye',memory:'ti-device-sd-card',case:'ti-briefcase',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone', tripod:'ti-tripod'}[cat]||'ti-package';
 }
 function catClass(cat){
-  return{camera:'ici-camera',lens:'ici-lens',memory:'ici-memory',case:'ici-case',charger:'ici-charger',battery:'ici-battery',microphone:'ici-microphone'}[cat]||'';
+  return{camera:'ici-camera',lens:'ici-lens',memory:'ici-memory',case:'ici-case',charger:'ici-charger',battery:'ici-battery',microphone:'ici-microphone', tripod:'ici-tripod'}[cat]||'';
 }
 
 /* ── NAV ── */
@@ -1194,10 +1204,10 @@ function closeSidebar(){
 
 /* ── STATS ── */
 function renderStats(){
-  var cats = ['camera','lens','memory','case','charger','battery','microphone'];
-  var labels = ['Cameras','Lenses','Memory cards','Cases','Chargers','Batteries','Microphones'];
-  var icons = ['ti-camera','ti-eye','ti-device-sd-card','ti-briefcase','ti-plug','ti-battery-2','ti-microphone'];
-  var iconCls = ['cam','lens','mem','case','chg','bat','mic'];
+  var cats = ['camera','lens','memory','case','charger','battery','microphone','tripod'];
+  var labels = ['Cameras','Lenses','Memory cards','Cases','Chargers','Batteries','Microphones','Tripods'];
+  var icons = ['ti-camera','ti-eye','ti-device-sd-card','ti-briefcase','ti-plug','ti-battery-2','ti-microphone','ti-tripod'];
+  var iconCls = ['cam','lens','mem','case','chg','bat','mic','tri'];
   var row = document.getElementById('stats-row');
   row.innerHTML = '';
   var totalAvail = 0, totalAll = 0;
