@@ -1604,10 +1604,6 @@ function renderKits(){
         '<button class="btn btn-icon btn-sm" onclick="deleteKit(\''+kit.id+'\')" title="Delete kit"><i class="ti ti-trash"></i></button>'+
       '</div>'+
       '<div class="kit-members">'+chips+'</div>'+
-      '<div class="kit-card-actions">'+
-        (anyAvail?'<button class="btn btn-out btn-sm" style="flex:1" onclick="promptKitAction(\''+kit.id+'\',\'out\')"><i class="ti ti-arrow-right"></i> Check out kit</button>':'')+
-        (anyOut?'<button class="btn btn-in btn-sm" style="flex:1" onclick="promptKitAction(\''+kit.id+'\',\'in\')"><i class="ti ti-arrow-back-up"></i> Check in kit</button>':'')+
-      '</div>'+
     '</div>';
   }).join('');
 }
