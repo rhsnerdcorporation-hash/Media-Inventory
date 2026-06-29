@@ -269,9 +269,9 @@
   .stat-card.active-mic  .stat-num, .stat-card.active-mic  .stat-lbl { color: #6d28d9; }
   .stat-card.active-mic  .stat-avail { color: #7c3aed; }
 
-  .stat-card.active-tri  { background: #ede9fe; border-color: #a78bfa; }
-  .stat-card.active-tri  .stat-num, .stat-card.active-tri  .stat-lbl { color: #6d28d9; }
-  .stat-card.active-tri  .stat-avail { color: #7c3aed; }
+  .stat-card.active-tri  { background: #fee9e9; border-color: #fa8b8b; }
+  .stat-card.active-tri  .stat-num, .stat-card.active-tri  .stat-lbl { color: #d92828; }
+  .stat-card.active-tri  .stat-avail { color: #ed3a3a; }
 
   .stat-icon-all { background: #e8e8ec; }
   .stat-icon-all i { color: #606068; }
@@ -294,7 +294,7 @@
   .stat-icon.chg { background: #fce7f3; } .stat-icon.chg i { color: #db2777; }
   .stat-icon.bat { background: #ffedd5; } .stat-icon.bat i { color: #c2410c; }
   .stat-icon.mic { background: #ede9fe; } .stat-icon.mic i { color: #6d28d9; }
-  .stat-icon.tri { background: #ede9fe; } .stat-icon.mic i { color: #6d28d9; }
+  .stat-icon.tri { background: #fee9e9; } .stat-icon.tri i { color: #d92828; }
   .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--ink); }
   .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .stat-avail { font-size: 11px; margin-top: 4px; font-weight: 500; }
@@ -334,7 +334,7 @@
   .ici-charger { background: #fce7f3; } .ici-charger i { color: #db2777; }
   .ici-battery { background: #ffedd5; } .ici-battery i { color: #c2410c; }
   .ici-microphone { background: #f5f3ff; } .ici-microphone i { color: #7c3aed; }
-  .ici-tripod { background: #f5f3ff; } .ici-microphone i { color: #7c3aed; }
+  .ici-tripod { background: #fff3f3; } .ici-tripod i { color: #ed3a3a; }
 
   .item-info { flex: 1; min-width: 0; }
   .item-name { font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -746,7 +746,7 @@
   .cat-charger { background: #fce7f3; color: #db2777; }
   .cat-battery { background: #ecfdf5; color: #059669; }
   .cat-microphone { background: #f5f3ff; color: #7c3aed; }
-  .cat-tripod { background: #f5f3ff; color: #7c3aed; }
+  .cat-tripod { background: #fff3f3; color: #ed3a3a; }
 
   .cond-pill {
     font-size: 11px; font-weight: 500; padding: 2px 8px;
@@ -970,7 +970,7 @@
           <button class="filter-chip" onclick="setFilter('charger')" data-filter="charger">Chargers</button>
           <button class="filter-chip" onclick="setFilter('battery')" data-filter="battery">Batteries</button>
           <button class="filter-chip" onclick="setFilter('microphone')" data-filter="microphone">Microphones</button>
-          <button class="filter-chip" onclick="setFilter('tripod')" data-filter="microphone">Tripods</button>
+          <button class="filter-chip" onclick="setFilter('tripod')" data-filter="tripod">Tripods</button>
           <button class="filter-chip" onclick="setFilter('out')" data-filter="out" style="margin-left:auto">Checked out</button>
         </div>
         <div class="item-grid" id="item-list"></div>
