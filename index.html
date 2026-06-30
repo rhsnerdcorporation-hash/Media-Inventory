@@ -662,6 +662,18 @@
     .topbar { padding: 0 16px; }
     .item-actions .btn span { display: none; }
     #toast { bottom: 16px; right: 16px; left: 16px; }
+    .sheet-connect-mobile.unlocked { display: block; }
+    .content { padding-bottom: 96px; }
+  }
+
+  .sheet-connect-mobile {
+    display: none;
+    position: fixed;
+    left: 12px; right: 12px; bottom: 12px;
+    z-index: 80;
+  }
+  .sheet-connect-mobile .sheet-connect {
+    box-shadow: var(--shadow-lg);
   }
 
   @media (max-width: 480px) {
@@ -899,7 +911,7 @@
 
 <script>
   // ── CHANGE THE PASSWORD HERE ──
-  var SITE_PASSWORD = "NerdCorporationIsTheBest";
+  var SITE_PASSWORD = "NerdTester";
 
   var EYE_OPEN_SVG = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
   var EYE_OFF_SVG = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a18.6 18.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
@@ -928,6 +940,7 @@
       input.classList.remove('lock-input-error');
       document.getElementById('lock-screen').style.display = 'none';
       document.getElementById('app-root').style.display = 'block';
+      document.getElementById('sheet-connect-mobile').classList.add('unlocked');
     } else {
       error.classList.add('show');
       input.classList.add('lock-input-error');
@@ -988,7 +1001,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <div class="sheet-connect">
+      <div class="sheet-connect" id="sheet-connect-desktop">
         <label>Google Sheets sync</label>
         <div class="sync-status">
           <div class="sync-dot" id="sync-dot"></div>
@@ -998,6 +1011,19 @@
       </div>
     </div>
   </aside>
+
+  <!-- Mobile-only Sheets sync bar: stays visible even though the sidebar
+       drawer (and its copy of this widget) is off-screen until opened. -->
+  <div class="sheet-connect-mobile" id="sheet-connect-mobile">
+    <div class="sheet-connect">
+      <label>Google Sheets sync</label>
+      <div class="sync-status">
+        <div class="sync-dot" id="sync-dot-mobile"></div>
+        <span id="sync-text-mobile">Not connected</span>
+      </div>
+      <a class="sheet-help-link" onclick="loadFromSheets()">Reload from Sheets</a>
+    </div>
+  </div>
 
   <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
@@ -2098,6 +2124,10 @@ function setSyncStatus(state,text){
   var txt=document.getElementById('sync-text');
   if(dot)dot.className='sync-dot'+(state?' '+state:'');
   if(txt)txt.textContent=text;
+  var dotM=document.getElementById('sync-dot-mobile');
+  var txtM=document.getElementById('sync-text-mobile');
+  if(dotM)dotM.className='sync-dot'+(state?' '+state:'');
+  if(txtM)txtM.textContent=text;
 }
 
 /* Logs one check-out/in/missing event as a new Activity Log row. */
