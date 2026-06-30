@@ -495,6 +495,18 @@
     display: none;
   }
   .result-card.visible { display: block; }
+  .result-card.just-scanned {
+    animation: result-pop-in 0.6s ease, result-glow 1.4s ease;
+  }
+  @keyframes result-pop-in {
+    0% { transform: scale(0.97); }
+    50% { transform: scale(1.015); }
+    100% { transform: scale(1); }
+  }
+  @keyframes result-glow {
+    0% { box-shadow: 0 0 0 0 rgba(37,99,235,0.45), var(--shadow-sm); }
+    100% { box-shadow: 0 0 0 14px rgba(37,99,235,0), var(--shadow-sm); }
+  }
   .result-header {
     padding: 16px 18px;
     border-bottom: 1px solid var(--border);
@@ -911,7 +923,7 @@
 
 <script>
   // ── CHANGE THE PASSWORD HERE ──
-  var SITE_PASSWORD = "NerdTester";
+  var SITE_PASSWORD = "nerdtester";
 
   var EYE_OPEN_SVG = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
   var EYE_OFF_SVG = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a18.6 18.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
@@ -1674,7 +1686,10 @@ function showResultCard(item){
       '<button class="btn btn-in" style="flex:1" onclick="doAction(\'in\')"><i class="ti ti-arrow-back-up"></i> Check in</button>'+
       '<button class="btn" onclick="doAction(\'missing\')"><i class="ti ti-alert-triangle"></i> Missing</button>';
   }
-  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+  card.classList.remove('just-scanned');
+  void card.offsetWidth; // restart animation even if scanning the same item twice in a row
+  card.classList.add('just-scanned');
 }
 
 function doAction(action){
@@ -2032,7 +2047,10 @@ function showKitResultCard(kit){
   if(anyAvail)html+='<button class="btn btn-out" style="flex:1" onclick="doKitAction(\'out\')"><i class="ti ti-arrow-right"></i> Check out kit</button>';
   if(anyOut)html+='<button class="btn btn-in" style="flex:1" onclick="doKitAction(\'in\')"><i class="ti ti-arrow-back-up"></i> Check in kit</button>';
   ra.innerHTML=html;
-  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+  card.scrollIntoView({behavior:'smooth',block:'start'});
+  card.classList.remove('just-scanned');
+  void card.offsetWidth;
+  card.classList.add('just-scanned');
 }
 
 function generateQR(id,name){
