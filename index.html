@@ -363,6 +363,34 @@
   .kit-member-chip .rm:hover { opacity: 1; }
   .kit-card-actions { display: flex; gap: 8px; margin-top: 12px; }
 
+  /* Kits grid layout — cards flow into columns instead of one long
+     stacked list, so a large kit collection stays scannable. */
+  .kit-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .kit-toolbar .input-field { flex: 1; min-width: 200px; }
+  .kit-toolbar .select-field { min-width: 170px; }
+  .kit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+  .kit-grid > .kit-card {
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .kit-grid > .empty { grid-column: 1 / -1; }
+  /* Member chips are capped to a few rows per card; a "show more" toggle
+     reveals the rest instead of every card growing to fit its longest list. */
+  .kit-show-more {
+    font-size: 11px; font-weight: 600; color: var(--blue);
+    cursor: pointer; margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 4px;
+    background: none; border: none; padding: 0;
+  }
+  .kit-show-more:hover { text-decoration: underline; }
+  .kit-show-more i { font-size: 13px; }
+
   .kit-check-list {
     border: 1px solid var(--border); border-radius: var(--radius);
     max-height: 260px; overflow-y: auto;
@@ -607,6 +635,7 @@
   .ld-out { background: var(--amber-bg); } .ld-out i { color: var(--amber); }
   .ld-in  { background: var(--green-bg); } .ld-in i  { color: var(--green); }
   .ld-miss { background: var(--red-bg); } .ld-miss i { color: var(--red); }
+  .ld-cat { background: var(--blue-bg); } .ld-cat i { color: var(--blue); }
   .log-body { flex: 1; }
   .log-item-name { font-size: 13px; font-weight: 600; color: var(--ink); }
   .log-detail   { font-size: 12px; color: var(--muted); margin-top: 2px; }
@@ -1224,7 +1253,15 @@
           <h2>Saved kits</h2>
           <button class="btn btn-primary btn-sm" onclick="openKitForm()"><i class="ti ti-plus"></i> New kit</button>
         </div>
-        <div id="kit-list"></div>
+        <div class="kit-toolbar">
+          <input type="text" class="input-field" id="kit-search" placeholder="Search kits or items…" oninput="renderKits()" />
+          <select class="select-field" id="kit-status-filter" onchange="renderKits()">
+            <option value="">All kits</option>
+            <option value="avail">Fully available</option>
+            <option value="out">Has items out / missing</option>
+          </select>
+        </div>
+        <div class="kit-grid" id="kit-list"></div>
 
         <div class="card-wrap" id="kit-form-wrap" style="display:none;margin-top:18px;max-width:560px">
           <div class="card-wrap-header"><h2 id="kit-form-title">New kit</h2></div>
@@ -1328,6 +1365,7 @@
                 <option value="in">Checked in</option>
                 <option value="missing">Missing</option>
                 <option value="removed">Removed</option>
+                <option value="category">Category changes</option>
               </select>
               <select class="select-field" id="log-cat" onchange="renderLog()">
                 <option value="">All categories</option>
@@ -1408,7 +1446,7 @@
    It looks like: https://script.google.com/macros/s/AKfycb..xyz../exec
    See Code.gs + the setup guide for how to get this.
    ========================================================================= */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbx8x8jYhQ_tv_G8S2-C5hpEUHrVrapN5pJ_jEDCT4taHNBbvAuFChm4zXf4We30dTz1/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyINlhcE5WfOm3WYLXgYZs1RMh9SbK32rhk4_dJFoXJ7KzFbBOjQ20KzM2s2ngAkIvf/exec";
 
 /* ── DATA ── */
 /* Categories are now user-editable (see the Categories tab) instead of
@@ -1747,7 +1785,8 @@ function renderLog(){
   // if not yet connected), not a full searchable archive.
   var recent = log.slice().sort(function(a,b){return new Date(b.time)-new Date(a.time);}).slice(0,10);
   var filtered = recent.filter(function(e){
-    if(type && e.action!==type) return false;
+    if(type==='category'){ if(e.action.indexOf('category_')!==0) return false; }
+    else if(type && e.action!==type) return false;
     if(cat && e.category!==cat) return false;
     if(search && !(
       e.itemName.toLowerCase().includes(search)||
@@ -1763,14 +1802,35 @@ function renderLog(){
     return;
   }
   el.innerHTML = filtered.map(function(e){
-    var dotCls = e.action==='out'?'ld-out':e.action==='missing'?'ld-miss':e.action==='removed'?'ld-miss':'ld-in';
-    var icon = e.action==='out'?'ti-arrow-right':e.action==='missing'?'ti-alert-triangle':e.action==='removed'?'ti-trash':'ti-arrow-back-up';
-    var label = e.action==='out'?'Checked out to ':e.action==='missing'?'Reported missing by ':e.action==='removed'?'Removed from inventory — reason: ':'Returned by ';
+    var isCatAction = e.action.indexOf('category_')===0;
+    var dotCls = e.action==='out'?'ld-out'
+      :e.action==='missing'?'ld-miss'
+      :e.action==='removed'?'ld-miss'
+      :e.action==='category_deleted'?'ld-miss'
+      :isCatAction?'ld-cat'
+      :'ld-in';
+    var icon = e.action==='out'?'ti-arrow-right'
+      :e.action==='missing'?'ti-alert-triangle'
+      :e.action==='removed'?'ti-trash'
+      :e.action==='category_added'?'ti-folder-plus'
+      :e.action==='category_updated'?'ti-pencil'
+      :e.action==='category_deleted'?'ti-folder-x'
+      :'ti-arrow-back-up';
+    var label = e.action==='out'?'Checked out to '
+      :e.action==='missing'?'Reported missing by '
+      :e.action==='removed'?'Removed from inventory — reason: '
+      :e.action==='category_added'?'Category created'
+      :e.action==='category_updated'?'Category updated'
+      :e.action==='category_deleted'?'Category deleted'
+      :'Returned by ';
+    var detail = isCatAction
+      ? label+(e.who?' — '+e.who:'')+' · '+e.itemId
+      : label+(e.who||'—')+(e.class?' · '+e.class:'')+' · '+e.itemId;
     return '<div class="log-entry">'+
       '<div class="log-dot '+dotCls+'"><i class="ti '+icon+'"></i></div>'+
       '<div class="log-body">'+
         '<div class="log-item-name">'+e.itemName+'</div>'+
-        '<div class="log-detail">'+label+(e.who||'—')+(e.class?' · '+e.class:'')+' · '+e.itemId+'</div>'+
+        '<div class="log-detail">'+detail+'</div>'+
       '</div>'+
       '<div class="log-time">'+fmtTime(e.time)+'</div>'+
     '</div>';
@@ -2164,21 +2224,64 @@ function kitStatusSummary(kit){
   return{label:'All available',cls:'s-in'};
 }
 
+/* Tracks which kit cards have their full member list expanded, so
+   toggling one doesn't reset the others on re-render. */
+var expandedKits={};
+var KIT_CHIP_LIMIT=6;
+
+function toggleKitMembers(id){
+  expandedKits[id]=!expandedKits[id];
+  renderKits();
+}
+
 function renderKits(){
   var list=document.getElementById('kit-list');
   if(!kits.length){
     list.innerHTML='<div class="empty"><i class="ti ti-stack-2"></i><p>No kits yet. Create one to bundle items you check out together.</p></div>';
     return;
   }
-  list.innerHTML=kits.map(function(kit){
+  var searchEl=document.getElementById('kit-search');
+  var statusEl=document.getElementById('kit-status-filter');
+  var search=searchEl?searchEl.value.trim().toLowerCase():'';
+  var statusFilter=statusEl?statusEl.value:'';
+
+  var filtered=kits.filter(function(kit){
+    var items=kitItems(kit);
+    if(search){
+      var matchName=kit.name.toLowerCase().indexOf(search)>-1;
+      var matchItem=items.some(function(x){return x.name.toLowerCase().indexOf(search)>-1||x.id.toLowerCase().indexOf(search)>-1;});
+      if(!matchName&&!matchItem)return false;
+    }
+    if(statusFilter){
+      var out=items.filter(function(x){return x.status==='out';}).length;
+      var missing=items.filter(function(x){return x.status==='missing';}).length;
+      if(statusFilter==='avail'&&(out>0||missing>0))return false;
+      if(statusFilter==='out'&&out===0&&missing===0)return false;
+    }
+    return true;
+  });
+
+  if(!filtered.length){
+    list.innerHTML='<div class="empty"><i class="ti ti-stack-2"></i><p>No kits match your search or filter.</p></div>';
+    return;
+  }
+
+  list.innerHTML=filtered.map(function(kit){
     var items=kitItems(kit);
     var summary=kitStatusSummary(kit);
-    var anyAvail=items.some(function(x){return x.status==='in';});
-    var anyOut=items.some(function(x){return x.status==='out'||x.status==='missing';});
-    var chips=items.map(function(x){
+    var expanded=!!expandedKits[kit.id];
+    var chipsArr=items.map(function(x){
       var cls=x.status==='out'?'m-out':x.status==='missing'?'m-missing':'';
       return '<span class="kit-member-chip '+cls+'"><i class="ti '+catIcon(x.category)+'" style="font-size:12px"></i>'+x.name+'</span>';
-    }).join('')||'<span class="kit-meta">No items added yet</span>';
+    });
+    var visible=expanded?chipsArr:chipsArr.slice(0,KIT_CHIP_LIMIT);
+    var hidden=chipsArr.length-visible.length;
+    var chipsHtml=visible.join('')||'<span class="kit-meta">No items added yet</span>';
+    var moreBtn=hidden>0
+      ? '<button type="button" class="kit-show-more" onclick="toggleKitMembers(\''+kit.id+'\')"><i class="ti ti-chevron-down"></i> +'+hidden+' more</button>'
+      : (expanded&&chipsArr.length>KIT_CHIP_LIMIT
+        ? '<button type="button" class="kit-show-more" onclick="toggleKitMembers(\''+kit.id+'\')"><i class="ti ti-chevron-up"></i> Show less</button>'
+        : '');
     return '<div class="kit-card">'+
       '<div class="kit-card-top">'+
         '<div class="kit-icon-wrap"><i class="ti ti-stack-2"></i></div>'+
@@ -2190,7 +2293,8 @@ function renderKits(){
         '<button class="btn btn-icon btn-sm" onclick="editKit(\''+kit.id+'\')" title="Edit kit"><i class="ti ti-pencil"></i></button>'+
         '<button class="btn btn-icon btn-sm" onclick="deleteKit(\''+kit.id+'\')" title="Delete kit"><i class="ti ti-trash"></i></button>'+
       '</div>'+
-      '<div class="kit-members">'+chips+'</div>'+
+      '<div class="kit-members">'+chipsHtml+'</div>'+
+      moreBtn+
     '</div>';
   }).join('');
 }
@@ -2490,16 +2594,26 @@ function saveCategory(){
     return catPrefix(c).toUpperCase()===prefix.toUpperCase() && c.key!==editingCategoryKey;
   });
   if(prefixClash){showToast('Prefix "'+prefix+'" is already used by "'+prefixClash.label+'"','ti-x',true);return;}
-  var savedCat;
+  var savedCat, isNew=!editingCategoryKey, changeSummary='';
   if(editingCategoryKey){
     var cat=findCategory(editingCategoryKey);
     if(!cat)return;
+    var oldLabel=cat.label,oldPrefix=catPrefix(cat),oldIcon=cat.icon,oldColor=cat.color,oldSubN=(cat.subcats||[]).length;
     cat.label=label;
     cat.icon=editingCategoryIcon;
     cat.color=editingCategoryColor;
     cat.prefix=prefix;
     cat.subcats=editingSubcats.slice();
     savedCat=cat;
+    // Build a short human-readable summary of what actually changed, so the
+    // log entry says something more useful than just "category updated".
+    var changes=[];
+    if(oldLabel!==label)changes.push('renamed from "'+oldLabel+'"');
+    if(oldPrefix!==prefix)changes.push('prefix '+oldPrefix+' → '+prefix);
+    if(oldIcon!==editingCategoryIcon)changes.push('icon changed');
+    if(oldColor!==editingCategoryColor)changes.push('colour changed');
+    if(oldSubN!==editingSubcats.length)changes.push('sub-categories changed');
+    changeSummary=changes.join(', ');
     showToast('Category "'+label+'" updated','ti-check',false);
   } else {
     var key=slugify(label);
@@ -2513,6 +2627,7 @@ function saveCategory(){
   closeCategoryForm();
   refreshCategoryDependentUI();
   syncCategoryToSheets(savedCat);
+  logCategoryChange(isNew?'category_added':'category_updated',savedCat,changeSummary);
 }
 
 function editCategory(key){
@@ -2529,11 +2644,23 @@ function deleteCategory(key){
     return;
   }
   if(!confirm('Delete category "'+cat.label+'"? This cannot be undone.'))return;
+  logCategoryChange('category_deleted',cat,'');
   categories=categories.filter(function(c){return c.key!==key;});
   save();
   refreshCategoryDependentUI();
   showToast('Category deleted','ti-check',false);
   deleteCategoryFromSheets(key);
+}
+
+/* Records a category add/edit/delete as an Activity Log entry, the same
+   way item check-outs/check-ins are logged — so category changes show up
+   in the Activity Log tab and get pushed to the Sheets log too. */
+function logCategoryChange(action,cat,detail){
+  var entry={action:action,itemId:cat.key,itemName:cat.label,category:cat.key,who:detail||'',class:'',time:new Date().toISOString()};
+  log.push(entry);
+  save();
+  if(typeof renderLog==='function')renderLog();
+  pushToSheets(entry);
 }
 
 /* Called after any category add/edit/delete so every part of the UI that
