@@ -240,50 +240,16 @@
   }
   .stat-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); }
 
-  /* per-category active colours */
-  .stat-card.active-cam  { background: #e0e7ff; border-color: #a5b4fc; }
-  .stat-card.active-cam  .stat-num, .stat-card.active-cam  .stat-lbl { color: #4f46e5; }
-  .stat-card.active-cam  .stat-avail { color: #6366f1; }
-
-  .stat-card.active-lens { background: #e0f2fe; border-color: #7dd3fc; }
-  .stat-card.active-lens .stat-num, .stat-card.active-lens .stat-lbl { color: #0284c7; }
-  .stat-card.active-lens .stat-avail { color: #0ea5e9; }
-
-  .stat-card.active-cap   { background: #fefce8; border-color: #fde047; }
-  .stat-card.active-cap  .stat-num, .stat-card.active-cap   .stat-lbl { color: #a16207; }
-  .stat-card.active-cap   .stat-avail { color: #ca8a04; }
-
-  .stat-card.active-mem  { background: #f0fdf4; border-color: #86efac; }
-  .stat-card.active-mem  .stat-num, .stat-card.active-mem  .stat-lbl { color: var(--green); }
-  .stat-card.active-mem  .stat-avail { color: #22c55e; }
-
-  .stat-card.active-chg  { background: #fce7f3; border-color: #f9a8d4; }
-  .stat-card.active-chg  .stat-num, .stat-card.active-chg  .stat-lbl { color: #db2777; }
-  .stat-card.active-chg  .stat-avail { color: #ec4899; }
-
-  .stat-card.active-bat  { background: #ffedd5; border-color: #fdba74; }
-  .stat-card.active-bat  .stat-num, .stat-card.active-bat  .stat-lbl { color: #c2410c; }
-  .stat-card.active-bat  .stat-avail { color: #ea580c; }
-
-  .stat-card.active-mic  { background: #ede9fe; border-color: #a78bfa; }
-  .stat-card.active-mic  .stat-num, .stat-card.active-mic  .stat-lbl { color: #6d28d9; }
-  .stat-card.active-mic  .stat-avail { color: #7c3aed; }
-
-  .stat-card.active-case { background: #fef3c7; border-color: #fcd34d; }
-  .stat-card.active-case .stat-num, .stat-card.active-case .stat-lbl { color: var(--amber); }
-  .stat-card.active-case .stat-avail { color: #f59e0b; }
-
-  .stat-card.active-tri  { background: #fee9e9; border-color: #fa8b8b; }
-  .stat-card.active-tri  .stat-num, .stat-card.active-tri  .stat-lbl { color: #d92828; }
-  .stat-card.active-tri  .stat-avail { color: #ed3a3a; }
-
-  .stat-card.active-drn  { background: #ecfeff; border-color: #67e8f9; }
-  .stat-card.active-drn  .stat-num, .stat-card.active-drn  .stat-lbl { color: #0e7490; }
-  .stat-card.active-drn  .stat-avail { color: #0891b2; }
-
-  .stat-card.active-osm  { background: #f4f4f5; border-color: #d4d4d8; }
-  .stat-card.active-osm  .stat-num, .stat-card.active-osm  .stat-lbl { color: #52525b; }
-  .stat-card.active-osm  .stat-avail { color: #71717a; }
+  /* Active colour now comes from the category's own stored colour via
+     --cat-bg / --cat-color / --cat-border custom properties (set inline
+     per card), instead of one hardcoded CSS rule per category. */
+  .stat-card.active {
+    background: var(--cat-bg, var(--surface2));
+    border-color: var(--cat-border, var(--border-strong));
+  }
+  .stat-card.active .stat-num,
+  .stat-card.active .stat-lbl,
+  .stat-card.active .stat-avail { color: var(--cat-color, var(--ink)); }
 
   .stat-icon-all { background: #e8e8ec; }
   .stat-icon-all i { color: #606068; }
@@ -297,19 +263,9 @@
     width: 32px; height: 32px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 10px;
+    background: var(--cat-bg, var(--surface2));
   }
-  .stat-icon i { font-size: 18px; }
-  .stat-icon.cam { background: #e0e7ff; } .stat-icon.cam i { color: #4f46e5; }
-  .stat-icon.lens { background: #e0f2fe; } .stat-icon.lens i { color: #0284c7; }
-  .stat-icon.cap { background: #fefce8; } .stat-icon.cap i { color: #a16207; }
-  .stat-icon.mem { background: #f0fdf4; } .stat-icon.mem i { color: var(--green); }
-  .stat-icon.chg { background: #fce7f3; } .stat-icon.chg i { color: #db2777; }
-  .stat-icon.bat { background: #ffedd5; } .stat-icon.bat i { color: #c2410c; }
-  .stat-icon.mic { background: #ede9fe; } .stat-icon.mic i { color: #6d28d9; }
-  .stat-icon.case { background: #fef3c7; } .stat-icon.case i { color: var(--amber); }
-  .stat-icon.tri { background: #fee9e9; } .stat-icon.tri i { color: #d92828; }
-  .stat-icon.drn { background: #ecfeff; } .stat-icon.drn i { color: #0e7490; }
-  .stat-icon.osm { background: #f4f4f5; } .stat-icon.osm i { color: #52525b; }
+  .stat-icon i { font-size: 18px; color: var(--cat-color, var(--mid)); }
   .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--ink); }
   .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .stat-avail { font-size: 11px; margin-top: 4px; font-weight: 500; }
@@ -340,19 +296,9 @@
     width: 40px; height: 40px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
+    background: var(--cat-bg, var(--surface2));
   }
-  .item-cat-icon i { font-size: 22px; }
-  .ici-camera { background: #e0e7ff; } .ici-camera i { color: #4f46e5; }
-  .ici-lens   { background: #e0f2fe; } .ici-lens i   { color: #0284c7; }
-  .ici-lenscap { background: #fefce8; } .ici-lenscap i { color: #a16207; }
-  .ici-memory { background: #f0fdf4; } .ici-memory i { color: var(--green); }
-  .ici-charger { background: #fce7f3; } .ici-charger i { color: #db2777; }
-  .ici-battery { background: #ffedd5; } .ici-battery i { color: #c2410c; }
-  .ici-microphone { background: #f5f3ff; } .ici-microphone i { color: #7c3aed; }
-  .ici-case   { background: #fef3c7; } .ici-case i   { color: var(--amber); }
-  .ici-tripod { background: #fff3f3; } .ici-tripod i { color: #ed3a3a; }
-  .ici-drone { background: #ecfeff; } .ici-drone i { color: #0e7490; }
-  .ici-osmo { background: #f4f4f5; } .ici-osmo i { color: #52525b; }
+  .item-cat-icon i { font-size: 22px; color: var(--cat-color, var(--mid)); }
 
   .item-info { flex: 1; min-width: 0; }
   .subcat-pill {
@@ -435,6 +381,73 @@
   .kit-check-row.disabled:hover { background: none; }
   .kit-check-row.disabled input { cursor: not-allowed; }
   .kc-taken { display: block; font-size: 10.5px; color: var(--red); font-weight: 500; margin-top: 1px; }
+
+  /* ── CATEGORY PICKERS ── */
+  .icon-picker, .color-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+  .icon-swatch {
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--mid); font-size: 17px;
+    transition: border-color 0.12s, background 0.12s, color 0.12s;
+  }
+  .icon-swatch:hover { border-color: var(--border-strong); }
+  .icon-swatch.selected { border-color: var(--ink); background: var(--ink); color: white; }
+  .color-swatch {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid var(--white);
+    box-shadow: 0 0 0 1px var(--border);
+    cursor: pointer; padding: 0;
+  }
+  .color-swatch.selected { box-shadow: 0 0 0 2px var(--ink); }
+  .color-swatch-custom {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface2); border: 2px dashed var(--border-strong);
+    color: var(--muted); font-size: 14px; position: relative; overflow: hidden;
+    box-shadow: none;
+  }
+  .color-swatch-custom:hover { border-color: var(--mid); color: var(--mid); }
+  .color-swatch-custom input[type="color"] {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer; border: none; padding: 0;
+  }
+
+  /* ── ICON SEARCH DROPDOWN ── */
+  .icon-select-wrap { position: relative; }
+  .icon-select-trigger {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding: 8px 12px; border-radius: var(--radius);
+    border: 1px solid var(--border-strong); background: var(--white);
+    cursor: pointer; font-size: 13px; color: var(--ink); font-family: inherit;
+  }
+  .icon-select-trigger:hover { border-color: var(--mid); }
+  .icon-select-current { display: flex; align-items: center; gap: 9px; }
+  .icon-select-current i:first-child {
+    width: 28px; height: 28px; border-radius: 7px; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--ink);
+  }
+  .icon-select-trigger > i:last-child { font-size: 15px; color: var(--muted); flex-shrink: 0; }
+  .icon-dropdown-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30;
+    background: var(--white); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 10px;
+  }
+  .icon-grid-scroll {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 6px; margin-top: 8px; max-height: 220px; overflow-y: auto; padding-right: 2px;
+  }
+  .icon-count-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* ── ITEM ID INPUT ── */
+  .id-input-row { display: flex; align-items: stretch; gap: 0; }
+  .id-prefix-badge {
+    display: flex; align-items: center; padding: 0 12px;
+    background: var(--surface2); border: 1px solid var(--border-strong);
+    border-right: none; border-radius: 8px 0 0 8px;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px;
+    color: var(--mid); white-space: nowrap;
+  }
+  .id-input-row .input-field { border-radius: 0 8px 8px 0; }
 
   /* ── BUTTONS ── */
   .btn {
@@ -554,8 +567,9 @@
     width: 44px; height: 44px; border-radius: 11px;
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
+    background: var(--cat-bg, var(--surface2));
   }
-  .result-icon-wrap i { font-size: 24px; }
+  .result-icon-wrap i { font-size: 24px; color: var(--cat-color, var(--mid)); }
   .result-name { font-size: 16px; font-weight: 600; color: var(--ink); }
   .result-id   { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .result-body { padding: 16px 18px; }
@@ -1050,6 +1064,9 @@
         <button class="nav-item" onclick="switchTab('add')" id="nav-add">
           <i class="ti ti-plus"></i> Add new item
         </button>
+        <button class="nav-item" onclick="switchTab('categories')" id="nav-categories">
+          <i class="ti ti-category"></i> Categories
+        </button>
       </div>
     </nav>
 
@@ -1192,21 +1209,7 @@
       <!-- INVENTORY PANEL -->
       <div class="panel" id="panel-inventory">
         <div class="stat-row" id="stats-row"></div>
-        <div class="filter-bar" id="filter-bar">
-          <button class="filter-chip active" onclick="setFilter('all')" data-filter="all">All</button>
-          <button class="filter-chip" onclick="setFilter('camera')" data-filter="camera"><i class="ti ti-camera" style="font-size:13px;vertical-align:-2px;margin-right:3px"></i>Cameras</button>
-          <button class="filter-chip" onclick="setFilter('lens')" data-filter="lens">Lenses</button>
-          <button class="filter-chip" onclick="setFilter('lenscap')" data-filter="lenscap">Lens caps</button>
-          <button class="filter-chip" onclick="setFilter('memory')" data-filter="memory">Memory cards</button>
-          <button class="filter-chip" onclick="setFilter('charger')" data-filter="charger">Chargers</button>
-          <button class="filter-chip" onclick="setFilter('battery')" data-filter="battery">Batteries</button>
-          <button class="filter-chip" onclick="setFilter('microphone')" data-filter="microphone">Microphones</button>
-          <button class="filter-chip" onclick="setFilter('case')" data-filter="case">Cases</button>
-          <button class="filter-chip" onclick="setFilter('tripod')" data-filter="tripod">Tripods</button>
-          <button class="filter-chip" onclick="setFilter('drone')" data-filter="drone">Drones</button>
-          <button class="filter-chip" onclick="setFilter('osmo')" data-filter="osmo">Osmos</button>
-          <button class="filter-chip" onclick="setFilter('out')" data-filter="out" style="margin-left:auto">Checked out</button>
-        </div>
+        <div class="filter-bar" id="filter-bar"></div>
         <div class="filter-bar" id="minor-filter-bar" style="display:none">
           <select class="select-field" id="minor-filter-select" onchange="setMinorFilter(this.value)" style="max-width:240px">
             <option value="">All sub-categories</option>
@@ -1251,6 +1254,61 @@
         </div>
       </div>
 
+      <!-- CATEGORIES PANEL -->
+      <div class="panel" id="panel-categories">
+        <div class="section-header">
+          <h2>Categories</h2>
+          <button class="btn btn-primary btn-sm" onclick="openCategoryForm()"><i class="ti ti-plus"></i> New category</button>
+        </div>
+        <div id="category-list"></div>
+
+        <div class="card-wrap" id="category-form-wrap" style="display:none;margin-top:18px;max-width:560px">
+          <div class="card-wrap-header"><h2 id="category-form-title">New category</h2></div>
+          <div style="padding:20px">
+            <div class="form-block" style="margin-bottom:14px">
+              <label>Category name</label>
+              <input type="text" class="input-field" id="cat-label" placeholder="e.g. Cables" oninput="updateCatKeyPreview()" />
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Stored as: <code id="cat-key-preview">—</code></div>
+            </div>
+            <div class="form-block" style="margin-bottom:14px">
+              <label>Item ID prefix</label>
+              <input type="text" class="input-field" id="cat-prefix" placeholder="e.g. CAM" maxlength="10" style="text-transform:uppercase" oninput="this.dataset.touched='1';updateCatKeyPreview()" />
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">Item IDs in this category will look like <code id="cat-prefix-preview">—</code></div>
+            </div>
+            <div class="form-block" style="margin-bottom:14px">
+              <label>Icon</label>
+              <div class="icon-select-wrap" id="icon-select-wrap">
+                <button type="button" class="icon-select-trigger" id="icon-select-trigger" onclick="toggleIconDropdown()">
+                  <span class="icon-select-current"><i class="ti" id="icon-select-current-icon"></i><span id="icon-select-current-name">Choose icon</span></span>
+                  <i class="ti ti-chevron-down"></i>
+                </button>
+                <div class="icon-dropdown-panel" id="icon-dropdown-panel" style="display:none">
+                  <input type="text" class="input-field" id="icon-search" placeholder="Search icons… (e.g. camera, tool, box)" oninput="renderIconPicker()" onkeydown="iconSearchKeydown(event)" />
+                  <div class="icon-grid-scroll" id="icon-picker"></div>
+                  <div class="icon-count-note" id="icon-count-note"></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-block" style="margin-bottom:14px">
+              <label>Colour</label>
+              <div class="color-picker" id="color-picker"></div>
+            </div>
+            <div class="form-block">
+              <label>Sub-categories (optional)</label>
+              <div class="kit-check-list" id="subcat-list" style="max-height:none"></div>
+              <div class="manual-row" style="margin-top:8px">
+                <input type="text" class="input-field" id="subcat-new-label" placeholder="e.g. Mirrorless" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addSubcatRow();}" />
+                <button class="btn btn-sm" onclick="addSubcatRow()"><i class="ti ti-plus"></i></button>
+              </div>
+            </div>
+            <div class="kit-card-actions" style="margin-top:16px">
+              <button class="btn btn-primary" style="flex:1" onclick="saveCategory()"><i class="ti ti-check"></i> Save category</button>
+              <button class="btn" onclick="closeCategoryForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- LOG PANEL -->
       <div class="panel" id="panel-log">
         <div class="card-wrap">
@@ -1273,17 +1331,6 @@
               </select>
               <select class="select-field" id="log-cat" onchange="renderLog()">
                 <option value="">All categories</option>
-                <option value="camera">Cameras</option>
-                <option value="lens">Lenses</option>
-                <option value="lenscap">Lens caps</option>
-                <option value="memory">Memory cards</option>
-                <option value="charger">Chargers</option>
-                <option value="battery">Batteries</option>
-                <option value="microphone">Microphones</option>
-                <option value="case">Cases</option>
-                <option value="tripod">Tripods</option>
-                <option value="drone">Drones</option>
-                <option value="osmo">Osmos</option>
               </select>
             </div>
           </div>
@@ -1302,23 +1349,15 @@
               <div class="add-grid">
                 <div class="form-block">
                   <label>Item ID (unique)</label>
-                  <input type="text" class="input-field" id="new-id" placeholder="e.g. CAM-004" />
+                  <div class="id-input-row">
+                    <span class="id-prefix-badge" id="new-id-prefix">—</span>
+                    <input type="text" class="input-field" id="new-id-number" placeholder="001" oninput="document.getElementById('new-id-number').dataset.touched='1';refreshNewIdPreview();" />
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px">Full ID: <code id="new-id-preview">—</code></div>
                 </div>
                 <div class="form-block">
                   <label>Category</label>
-                  <select class="input-field select-full" id="new-cat" onchange="updateNewSubcatOptions()">
-                    <option value="camera">Camera</option>
-                    <option value="lens">Lens</option>
-                    <option value="lenscap">Lens Cap</option>
-                    <option value="memory">Memory card</option>
-                    <option value="charger">Charger</option>
-                    <option value="battery">Battery</option>
-                    <option value="microphone">Microphone</option>
-                    <option value="case">Case</option>
-                    <option value="tripod">Tripod</option>
-                    <option value="drone">Drone</option>
-                    <option value="osmo">Osmo</option>
-                  </select>
+                  <select class="input-field select-full" id="new-cat" onchange="updateNewSubcatOptions();updateNewIdPreview();"></select>
                 </div>
                 <div class="form-block" id="new-subcat-wrap" style="display:none">
                   <label>Sub-category</label>
@@ -1372,9 +1411,69 @@
 const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyC_EobzezGRtScL7r9bEab2ehH3zTPJibAWxtvbvcWNhk5f4ivTU75qJDRff7bedJp/exec";
 
 /* ── DATA ── */
+/* Categories are now user-editable (see the Categories tab) instead of
+   hardcoded — this seed list is only the starting point for a brand-new
+   install / empty localStorage, and is copied into cam_categories the
+   first time the app runs. */
+function defaultCategories(){
+  return [
+    {key:'camera',label:'Cameras',icon:'ti-camera',color:'#4f46e5',prefix:'CAM',subcats:[{v:'DMC-G7',label:'G7'},{v:'EOS-R50',label:'R50'}]},
+    {key:'lens',label:'Lenses',icon:'ti-eye',color:'#0284c7',prefix:'LENS',subcats:[{v:'55-210',label:'55-210'},{v:'45-150',label:'45-150'},{v:'14-42',label:'14-42'},{v:'14-30',label:'14-30'}]},
+    {key:'lenscap',label:'Lens caps',icon:'ti-circle-dot',color:'#a16207',prefix:'CAP',subcats:[]},
+    {key:'memory',label:'Memory cards',icon:'ti-device-sd-card',color:'#16a34a',prefix:'MEM',subcats:[]},
+    {key:'charger',label:'Chargers',icon:'ti-plug',color:'#db2777',prefix:'CHG',subcats:[]},
+    {key:'battery',label:'Batteries',icon:'ti-battery-2',color:'#c2410c',prefix:'BATT',subcats:[]},
+    {key:'microphone',label:'Microphones',icon:'ti-microphone',color:'#7c3aed',prefix:'MIC',subcats:[]},
+    {key:'case',label:'Cases',icon:'ti-briefcase',color:'#d97706',prefix:'CASE',subcats:[]},
+    {key:'tripod',label:'Tripods',icon:'ti-broadcast',color:'#ed3a3a',prefix:'TRI',subcats:[]},
+    {key:'drone',label:'Drones',icon:'ti-drone',color:'#0e7490',prefix:'DRONE',subcats:[]},
+    {key:'osmo',label:'Osmos',icon:'ti-video',color:'#52525b',prefix:'OSMO',subcats:[]}
+  ];
+}
+/* Preset colour swatches offered in the Categories tab. Users can also add
+   any custom colour via the "+" swatch — those get appended to
+   customColorChoices below and persist for reuse on future categories. */
+var colorChoices = ['#4f46e5','#0284c7','#a16207','#16a34a','#db2777','#c2410c','#7c3aed','#d97706','#ed3a3a','#0e7490','#52525b','#059669','#e11d48','#2563eb','#65a30d','#9333ea'];
+var customColorChoices = JSON.parse(localStorage.getItem('cam_custom_colors') || '[]');
+
+/* Large searchable icon set for the Categories tab (Tabler webfont icon
+   names). Not literally every icon in the library, but a broad, curated
+   collection spanning equipment/tech plus everyday symbols, browsable via
+   the search dropdown instead of a handful of hardcoded choices. */
+var iconChoices = [
+  'ti-camera','ti-camera-selfie','ti-camera-plus','ti-video','ti-movie','ti-photo','ti-photo-video','ti-aperture','ti-focus','ti-focus-2','ti-flash','ti-flash-off',
+  'ti-microphone','ti-microphone-2','ti-headphones','ti-speakerphone','ti-volume','ti-volume-2','ti-volume-3','ti-broadcast','ti-antenna','ti-drone','ti-disc','ti-vinyl',
+  'ti-music','ti-playlist','ti-player-play','ti-player-pause','ti-player-stop','ti-player-record','ti-screen-share','ti-device-tv','ti-device-tv-old','ti-projector','ti-slideshow','ti-eye','ti-eye-off','ti-circle-dot',
+  'ti-device-laptop','ti-device-desktop','ti-device-mobile','ti-device-tablet','ti-device-sd-card','ti-device-usb','ti-usb','ti-cpu','ti-server','ti-router',
+  'ti-wifi','ti-bluetooth','ti-plug','ti-plug-connected','ti-battery','ti-battery-1','ti-battery-2','ti-battery-3','ti-battery-4','ti-battery-charging',
+  'ti-bulb','ti-bulb-off','ti-cable','ti-keyboard','ti-mouse','ti-printer','ti-scanner','ti-webcam','ti-satellite','ti-satellite-off','ti-radio','ti-remote-control','ti-gauge','ti-devices','ti-adjustments',
+  'ti-tool','ti-tools','ti-hammer','ti-screwdriver','ti-wrench','ti-briefcase','ti-backpack','ti-suitcase','ti-box','ti-package','ti-package-export','ti-package-import',
+  'ti-container','ti-archive','ti-toolbox','ti-ladder','ti-flashlight','ti-first-aid-kit','ti-fire-extinguisher','ti-scissors','ti-ruler','ti-ruler-2','ti-flask','ti-magnet',
+  'ti-car','ti-truck','ti-plane','ti-bike','ti-motorbike','ti-bus','ti-train','ti-ship','ti-rocket','ti-parking','ti-gas-station','ti-road',
+  'ti-sun','ti-moon','ti-cloud','ti-cloud-rain','ti-snowflake','ti-bolt','ti-wind','ti-droplet','ti-flame','ti-leaf','ti-tree','ti-mountain','ti-beach','ti-umbrella',
+  'ti-file','ti-files','ti-folder','ti-folder-open','ti-file-text','ti-notes','ti-book','ti-books','ti-note','ti-clipboard-list','ti-checklist','ti-report','ti-certificate','ti-receipt','ti-invoice',
+  'ti-shopping-cart','ti-shopping-bag','ti-basket','ti-cash','ti-coin','ti-credit-card','ti-wallet','ti-percentage','ti-discount',
+  'ti-user-circle','ti-users-group','ti-shield','ti-shield-check','ti-shield-lock','ti-fingerprint','ti-id','ti-id-badge',
+  'ti-ball-basketball','ti-ball-football','ti-trophy','ti-medal','ti-target','ti-crown','ti-gift','ti-cake','ti-confetti','ti-balloon','ti-puzzle','ti-dice','ti-chess-knight',
+  'ti-building','ti-building-store','ti-building-warehouse','ti-home','ti-home-2','ti-school','ti-hospital','ti-tent',
+  'ti-heartbeat','ti-pill','ti-stethoscope','ti-thermometer',
+  'ti-star','ti-star-filled','ti-heart','ti-heart-filled','ti-circle','ti-square','ti-triangle','ti-hexagon','ti-diamond','ti-infinity','ti-asterisk',
+  'ti-home-move','ti-settings','ti-search','ti-user','ti-users','ti-bookmark','ti-tag','ti-tags','ti-flag','ti-bell',
+  'ti-mail','ti-send','ti-phone','ti-phone-call','ti-message','ti-message-circle','ti-calendar','ti-clock','ti-map-pin','ti-map','ti-compass','ti-globe',
+  'ti-link','ti-paperclip','ti-download','ti-upload','ti-share','ti-trash','ti-edit','ti-pencil','ti-check','ti-x','ti-plus','ti-minus',
+  'ti-info-circle','ti-alert-triangle','ti-alert-circle','ti-question-mark','ti-lock','ti-lock-open','ti-key','ti-filter','ti-refresh','ti-rotate','ti-copy','ti-clipboard',
+  'ti-list','ti-list-check','ti-layout-grid','ti-layout-list','ti-menu-2','ti-dots','ti-dots-vertical'
+];
+
 var inventory = JSON.parse(localStorage.getItem('cam_inv') || 'null') || [];
 var log = JSON.parse(localStorage.getItem('cam_log') || '[]');
 var kits = JSON.parse(localStorage.getItem('cam_kits') || '[]');
+var categories = JSON.parse(localStorage.getItem('cam_categories') || 'null') || defaultCategories();
+/* Back-fill a prefix for categories saved before this feature existed, so
+   older installs still get sensible auto-prefixed IDs without a manual step. */
+categories.forEach(function(c){
+  if(!c.prefix)c.prefix=(c.key||'').replace(/[^a-z0-9]/gi,'').slice(0,4).toUpperCase()||'ITM';
+});
 var currentItem = null;
 var currentKit = null;
 var videoStream = null;
@@ -1382,9 +1481,10 @@ var scanInterval = null;
 var inventoryFilter = 'all';
 var minorFilter = '';
 var editingKitId = null;
+var editingCategoryKey = null;
 
 function tsOffset(m){var d=new Date();d.setMinutes(d.getMinutes()+m);return d.toISOString();}
-function save(){localStorage.setItem('cam_inv',JSON.stringify(inventory));localStorage.setItem('cam_log',JSON.stringify(log));localStorage.setItem('cam_kits',JSON.stringify(kits));}
+function save(){localStorage.setItem('cam_inv',JSON.stringify(inventory));localStorage.setItem('cam_log',JSON.stringify(log));localStorage.setItem('cam_kits',JSON.stringify(kits));localStorage.setItem('cam_categories',JSON.stringify(categories));localStorage.setItem('cam_custom_colors',JSON.stringify(customColorChoices));}
 
 function fmtTime(iso){
   if(!iso)return'';
@@ -1396,31 +1496,55 @@ function fmtTime(iso){
   return d.toLocaleDateString('en-NZ',{day:'numeric',month:'short'});
 }
 
-function catIcon(cat){
-  return{camera:'ti-camera',lens:'ti-eye', lenscap:'ti-circle-dot', memory:'ti-device-sd-card',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone',case:'ti-briefcase', tripod:'ti-broadcast', drone:'ti-drone', osmo:'ti-video'}[cat]||'ti-package';
+function findCategory(cat){
+  return categories.find(function(c){return c.key===cat;});
 }
-function catClass(cat){
-  return{camera:'ici-camera',lens:'ici-lens',lenscap:'ici-lenscap',memory:'ici-memory',charger:'ici-charger',battery:'ici-battery',microphone:'ici-microphone',case:'ici-case', tripod:'ici-tripod', drone:'ici-drone', osmo:'ici-osmo'}[cat]||'';
+/* The prefix used for this category's item IDs — falls back to a
+   derivation from the category key if one was never explicitly set. */
+function catPrefix(cat){
+  if(!cat)return '';
+  if(cat.prefix)return cat.prefix;
+  return (cat.key||'').replace(/[^a-z0-9]/gi,'').slice(0,4).toUpperCase()||'ITM';
+}
+function sanitizePrefix(v){
+  return (v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10);
+}
+function catIcon(cat){
+  var c=findCategory(cat);
+  return c?c.icon:'ti-package';
+}
+function catColor(cat){
+  var c=findCategory(cat);
+  return c?c.color:'#64748b';
+}
+function catLabel(cat){
+  var c=findCategory(cat);
+  return c?c.label:cat;
+}
+function hexToRgba(hex,alpha){
+  hex=(hex||'#64748b').replace('#','');
+  if(hex.length===3)hex=hex.split('').map(function(ch){return ch+ch;}).join('');
+  var r=parseInt(hex.substring(0,2),16),g=parseInt(hex.substring(2,4),16),b=parseInt(hex.substring(4,6),16);
+  return 'rgba('+r+','+g+','+b+','+alpha+')';
+}
+/* Returns inline CSS-custom-property text so an icon chip / stat card can
+   pick up a category's colour without needing a hardcoded CSS class per
+   category — this is what makes newly-added categories look "themed"
+   automatically instead of falling back to plain grey. */
+function catCssVars(cat){
+  var hex=catColor(cat);
+  return '--cat-bg:'+hexToRgba(hex,0.13)+';--cat-color:'+hex+';--cat-border:'+hexToRgba(hex,0.4)+';';
 }
 
-/* Minor / sub-categories, only offered when the item's main category is
-   Camera or Lens — lets you filter and tag e.g. "Mirrorless" vs "DSLR",
-   or "Prime" vs "Zoom", without inventing a whole new top-level category. */
-var minorCats = {
-  camera: [
-    {v:'DMC-G7',label:'G7'},
-    {v:'EOS-R50',label:'R50'}
-  ],
-  lens: [
-    {v:'55-210',label:'55-210'},
-    {v:'45-150',label:'45-150'},
-    {v:'14-42',label:'14-42'},
-    {v:'14-30',label:'14-30'}
-  ]
-};
+/* Minor / sub-categories — each category can define its own (e.g. "Mirrorless"
+   vs "DSLR" for Camera), managed from the Categories tab. */
+function subcatsFor(cat){
+  var c=findCategory(cat);
+  return c&&c.subcats&&c.subcats.length?c.subcats:null;
+}
 function minorLabel(cat,v){
   if(!v)return'';
-  var arr=minorCats[cat];
+  var arr=subcatsFor(cat);
   if(!arr)return v;
   var f=arr.find(function(o){return o.v===v;});
   return f?f.label:v;
@@ -1433,6 +1557,7 @@ var tabMeta = {
   kits: {title:'Kits', sub:'Group equipment and check it out together'},
   log: {title:'Activity log', sub:'Full check-out and check-in history'},
   add: {title:'Add new item', sub:'Register equipment and print a QR label'},
+  categories: {title:'Categories', sub:'Manage categories and sub-categories'},
   setup: {title:'Google Sheets setup', sub:'Two-way sync via Google Apps Script'}
 };
 
@@ -1447,6 +1572,7 @@ function switchTab(t){
   if(t === 'scan') populateKitSelect();
   if(t === 'inventory') renderInventory();
   if(t === 'kits') renderKits();
+  if(t === 'categories') renderCategories();
   if(t === 'log'){
     renderLog();
     loadFromSheets();
@@ -1465,23 +1591,20 @@ function closeSidebar(){
 
 /* ── STATS ── */
 function renderStats(){
-  var cats = ['camera','lens','lenscap','memory','charger','battery','microphone','case','tripod','drone','osmo'];
-  var labels = ['Cameras','Lenses','Lens caps','Memory cards','Chargers','Batteries','Microphones','Cases','Tripods','Drones','Osmo'];
-  var icons = ['ti-camera','ti-eye','ti-circle-dot','ti-device-sd-card','ti-plug','ti-battery-2','ti-microphone','ti-briefcase','ti-broadcast','ti-drone','ti-video'];
-  var iconCls = ['cam','lens','cap','mem','chg','bat','mic','case','tri','drn','osm'];
+  renderFilterChips();
   var row = document.getElementById('stats-row');
   row.innerHTML = '';
   var totalAvail = 0, totalAll = 0;
-  cats.forEach(function(c,i){
-    var items = inventory.filter(function(x){return x.category===c;});
+  categories.forEach(function(cat){
+    var items = inventory.filter(function(x){return x.category===cat.key;});
     var avail = items.filter(function(x){return x.status==='in';}).length;
     totalAvail += avail; totalAll += items.length;
     var low = avail===0&&items.length>0;
-    var isActive = inventoryFilter===c;
-    row.innerHTML += '<div class="stat-card'+(isActive?' active-'+iconCls[i]:'')+'" onclick="setFilter(\''+(inventoryFilter===c?'all':c)+'\')" title="Filter by '+labels[i]+'">'+
-      '<div class="stat-icon '+iconCls[i]+'"><i class="ti '+icons[i]+'"></i></div>'+
+    var isActive = inventoryFilter===cat.key;
+    row.innerHTML += '<div class="stat-card'+(isActive?' active':'')+'" style="'+catCssVars(cat.key)+'" onclick="setFilter(\''+(inventoryFilter===cat.key?'all':cat.key)+'\')" title="Filter by '+cat.label+'">'+
+      '<div class="stat-icon"><i class="ti '+cat.icon+'"></i></div>'+
       '<div class="stat-num">'+avail+'</div>'+
-      '<div class="stat-lbl">'+labels[i]+'</div>'+
+      '<div class="stat-lbl">'+cat.label+'</div>'+
       '<div class="stat-avail '+(low?'avail-low':'avail-ok')+'">'+avail+'/'+items.length+' available</div>'+
       '</div>';
   });
@@ -1497,6 +1620,38 @@ function renderStats(){
       '<div class="stat-avail">'+totalAvail+'/'+totalAll+' available</div>'+
     '</div>'
   );
+}
+
+/* Builds the row of category filter chips (with each category's own icon,
+   same as the Cameras chip used to have) plus the fixed All / Checked out
+   chips — regenerated from the `categories` list so a newly-added category
+   automatically gets its own chip without touching this code again. */
+function renderFilterChips(){
+  var bar=document.getElementById('filter-bar');
+  if(!bar)return;
+  var html='<button class="filter-chip'+(inventoryFilter==='all'?' active':'')+'" onclick="setFilter(\'all\')" data-filter="all">All</button>';
+  categories.forEach(function(cat){
+    html+='<button class="filter-chip'+(inventoryFilter===cat.key?' active':'')+'" onclick="setFilter(\''+cat.key+'\')" data-filter="'+cat.key+'"><i class="ti '+cat.icon+'" style="font-size:13px;vertical-align:-2px;margin-right:3px"></i>'+cat.label+'</button>';
+  });
+  html+='<button class="filter-chip'+(inventoryFilter==='out'?' active':'')+'" onclick="setFilter(\'out\')" data-filter="out" style="margin-left:auto">Checked out</button>';
+  bar.innerHTML=html;
+}
+
+/* Fills the "Add new item" category select and the Activity Log category
+   filter from the current categories list. */
+function populateNewCatSelect(){
+  var sel=document.getElementById('new-cat');
+  if(!sel)return;
+  var current=sel.value;
+  sel.innerHTML=categories.map(function(c){return '<option value="'+c.key+'">'+c.label+'</option>';}).join('');
+  if(categories.find(function(c){return c.key===current;}))sel.value=current;
+}
+function populateLogCatSelect(){
+  var sel=document.getElementById('log-cat');
+  if(!sel)return;
+  var current=sel.value;
+  sel.innerHTML='<option value="">All categories</option>'+categories.map(function(c){return '<option value="'+c.key+'">'+c.label+'</option>';}).join('');
+  if(categories.find(function(c){return c.key===current;}))sel.value=current;
 }
 
 /* ── INVENTORY ── */
@@ -1516,7 +1671,7 @@ function setFilter(f){
 function updateMinorFilterBar(){
   var bar=document.getElementById('minor-filter-bar');
   var sel=document.getElementById('minor-filter-select');
-  var opts=minorCats[inventoryFilter];
+  var opts=subcatsFor(inventoryFilter);
   if(opts){
     bar.style.display='';
     sel.innerHTML='<option value="">All sub-categories</option>'+opts.map(function(o){return '<option value="'+o.v+'">'+o.label+'</option>';}).join('');
@@ -1566,7 +1721,7 @@ function renderInventory(){
       ? '<div class="item-kit-tags">'+memberKits.map(function(k){return '<span class="kit-tag"><i class="ti ti-stack-2"></i>'+k.name+'</span>';}).join('')+'</div>'
       : '';
     return '<div class="item-card">'+
-      '<div class="item-cat-icon '+catClass(item.category)+'"><i class="ti '+catIcon(item.category)+'"></i></div>'+
+      '<div class="item-cat-icon" style="'+catCssVars(item.category)+'"><i class="ti '+catIcon(item.category)+'"></i></div>'+
       '<div class="item-info">'+
         '<div class="item-name">'+item.name+subPill+'</div>'+
         '<div class="item-meta">'+item.id+'</div>'+
@@ -1757,7 +1912,8 @@ function showResultCard(item){
   var card=document.getElementById('result-card');
   card.classList.add('visible');
   var iw=document.getElementById('result-icon-wrap');
-  iw.className='result-icon-wrap '+catClass(item.category);
+  iw.className='result-icon-wrap';
+  iw.style.cssText=catCssVars(item.category);
   document.getElementById('result-icon').className='ti '+catIcon(item.category);
   document.getElementById('result-name').textContent=item.name;
   document.getElementById('result-id').textContent=item.id;
@@ -1846,19 +2002,67 @@ function quickAction(id,action){
 
 /* ── ADD ITEM ── */
 function addItem(){
-  var id=document.getElementById('new-id').value.trim().toUpperCase();
-  var name=document.getElementById('new-name').value.trim();
   var cat=document.getElementById('new-cat').value;
-  var subcat=minorCats[cat]?document.getElementById('new-subcat').value:'';
-  if(!id){showToast('Enter an item ID','ti-alert-triangle',true);return;}
+  var c=findCategory(cat);
+  var prefix=catPrefix(c);
+  var numRaw=document.getElementById('new-id-number').value.trim();
+  var name=document.getElementById('new-name').value.trim();
+  var subcat=subcatsFor(cat)?document.getElementById('new-subcat').value:'';
+  if(!numRaw){showToast('Enter the item number','ti-alert-triangle',true);return;}
+  var id=(prefix?prefix+'-':'')+numRaw.toUpperCase();
   if(!name){showToast('Enter an item name','ti-alert-triangle',true);return;}
   if(inventory.find(function(x){return x.id===id;})){showToast('ID "'+id+'" already exists','ti-x',true);return;}
   inventory.push({id:id,name:name,category:cat,subcategory:subcat,status:'in',lastWho:'',lastClass:'',lastTime:''});
   save();
   syncItemToSheets(inventory[inventory.length-1]);
   showToast(name+' added to inventory','ti-check',false);
-  document.getElementById('new-id').value='';
   document.getElementById('new-name').value='';
+  var numInput=document.getElementById('new-id-number');
+  numInput.value='';
+  numInput.dataset.touched='';
+  updateNewIdPreview();
+}
+
+/* Works out the next free item number for a category (e.g. if CAM-001 and
+   CAM-002 exist, suggests CAM-003), preserving zero-padding width. */
+function suggestNextIdNumber(catKey){
+  var cat=findCategory(catKey);
+  var prefix=catPrefix(cat);
+  if(!prefix)return '001';
+  var re=new RegExp('^'+prefix.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'-0*(\\d+)$','i');
+  var maxNum=0,width=3;
+  inventory.forEach(function(it){
+    var m=it.id.match(re);
+    if(m){
+      var n=parseInt(m[1],10);
+      if(n>=maxNum){maxNum=n;width=Math.max(width,m[1].length);}
+    }
+  });
+  var s=String(maxNum+1);
+  while(s.length<width)s='0'+s;
+  return s;
+}
+
+/* Refreshes the prefix badge + suggested number whenever the selected
+   category changes; leaves the number alone once the person has typed
+   into it themselves. */
+function updateNewIdPreview(){
+  var cat=document.getElementById('new-cat').value;
+  var c=findCategory(cat);
+  var prefix=catPrefix(c);
+  var badge=document.getElementById('new-id-prefix');
+  if(!badge)return;
+  badge.textContent=prefix?prefix+'-':'—';
+  var numInput=document.getElementById('new-id-number');
+  if(!numInput.dataset.touched){
+    numInput.value=prefix?suggestNextIdNumber(cat):'';
+  }
+  refreshNewIdPreview();
+}
+function refreshNewIdPreview(){
+  var prefix=document.getElementById('new-id-prefix').textContent;
+  var num=document.getElementById('new-id-number').value.trim().toUpperCase();
+  document.getElementById('new-id-preview').textContent=(prefix==='—'||!num)?'—':(prefix+num);
 }
 
 /* Shows the sub-category dropdown only for categories that have minor
@@ -1868,7 +2072,7 @@ function updateNewSubcatOptions(){
   var cat=document.getElementById('new-cat').value;
   var wrap=document.getElementById('new-subcat-wrap');
   var sel=document.getElementById('new-subcat');
-  var opts=minorCats[cat];
+  var opts=subcatsFor(cat);
   if(opts){
     wrap.style.display='';
     sel.innerHTML='<option value="">Select…</option>'+opts.map(function(o){return '<option value="'+o.v+'">'+o.label+'</option>';}).join('');
@@ -2073,6 +2277,270 @@ function deleteKit(id){
   renderKits();
   populateKitSelect();
   showToast('Kit deleted','ti-check',false);
+}
+
+/* ── CATEGORIES ── */
+/* Lets people add / edit / remove top-level categories and their
+   sub-categories from the UI instead of editing this file's source. */
+var editingCategoryIcon='';
+var editingCategoryColor='';
+var editingSubcats=[];
+
+function slugify(s){
+  return (s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-+|-+$)/g,'');
+}
+
+function renderCategories(){
+  var list=document.getElementById('category-list');
+  if(!list)return;
+  if(!categories.length){
+    list.innerHTML='<div class="empty"><i class="ti ti-category"></i><p>No categories yet. Add one to start organizing equipment.</p></div>';
+    return;
+  }
+  list.innerHTML=categories.map(function(cat){
+    var count=inventory.filter(function(x){return x.category===cat.key;}).length;
+    var subs=cat.subcats||[];
+    var subChips=subs.length
+      ? subs.map(function(s){return '<span class="kit-member-chip">'+s.label+'</span>';}).join('')
+      : '<span class="kit-meta">No sub-categories</span>';
+    return '<div class="kit-card">'+
+      '<div class="kit-card-top">'+
+        '<div class="kit-icon-wrap" style="'+catCssVars(cat.key)+'background:var(--cat-bg)"><i class="ti '+cat.icon+'" style="color:var(--cat-color)"></i></div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div class="kit-name">'+cat.label+'</div>'+
+          '<div class="kit-meta">'+count+' item'+(count===1?'':'s')+' · <code style="font-size:10.5px;color:var(--muted)">'+cat.key+'</code> · IDs: <code style="font-size:10.5px;color:var(--muted)">'+catPrefix(cat)+'-XXX</code></div>'+
+        '</div>'+
+        '<button class="btn btn-icon btn-sm" onclick="editCategory(\''+cat.key+'\')" title="Edit category"><i class="ti ti-pencil"></i></button>'+
+        '<button class="btn btn-icon btn-sm" onclick="deleteCategory(\''+cat.key+'\')" title="Delete category" style="color:var(--red)"><i class="ti ti-trash"></i></button>'+
+      '</div>'+
+      '<div class="kit-members">'+subChips+'</div>'+
+    '</div>';
+  }).join('');
+}
+
+function updateCatKeyPreview(){
+  var preview=document.getElementById('cat-key-preview');
+  var label=document.getElementById('cat-label').value;
+  if(editingCategoryKey){ preview.textContent=editingCategoryKey; }
+  else { preview.textContent=slugify(label)||'—'; }
+
+  var prefixInput=document.getElementById('cat-prefix');
+  // Auto-suggest a prefix from the category name until the person edits
+  // the prefix field themselves (only for brand-new categories).
+  if(!editingCategoryKey && !prefixInput.dataset.touched){
+    prefixInput.value=sanitizePrefix(label).slice(0,4);
+  }
+  var prefixPreview=document.getElementById('cat-prefix-preview');
+  var p=sanitizePrefix(prefixInput.value);
+  prefixPreview.textContent=p?p+'-001':'—';
+}
+
+/* Icon dropdown: renders a search-filtered grid inside the popover panel
+   (rather than a fixed row of ~20 icons) so the whole curated icon set is
+   reachable by typing a few letters. */
+function renderIconPicker(){
+  var wrap=document.getElementById('icon-picker');
+  if(!wrap)return;
+  var qEl=document.getElementById('icon-search');
+  var q=qEl?qEl.value.trim().toLowerCase().replace(/^ti-/,''):'';
+  var list=iconChoices.filter(function(ic){return !q||ic.indexOf(q)>-1;});
+  var note=document.getElementById('icon-count-note');
+  if(!list.length){
+    wrap.innerHTML='<div style="grid-column:1/-1;color:var(--muted);font-size:12px;padding:8px 2px">No icons match "'+q+'"</div>';
+    if(note)note.textContent='';
+    return;
+  }
+  wrap.innerHTML=list.map(function(ic){
+    return '<button type="button" class="icon-swatch'+(ic===editingCategoryIcon?' selected':'')+'" onclick="selectCategoryIcon(\''+ic+'\')" title="'+ic+'"><i class="ti '+ic+'"></i></button>';
+  }).join('');
+  if(note)note.textContent=list.length+' of '+iconChoices.length+' icons';
+}
+function updateIconSelectTrigger(){
+  var iconEl=document.getElementById('icon-select-current-icon');
+  var nameEl=document.getElementById('icon-select-current-name');
+  if(!iconEl)return;
+  iconEl.className='ti '+(editingCategoryIcon||'ti-help-circle');
+  nameEl.textContent=editingCategoryIcon?editingCategoryIcon.replace('ti-',''):'Choose icon';
+}
+function toggleIconDropdown(force){
+  var panel=document.getElementById('icon-dropdown-panel');
+  if(!panel)return;
+  var show=force!==undefined?force:(panel.style.display==='none');
+  panel.style.display=show?'block':'none';
+  if(show){
+    var search=document.getElementById('icon-search');
+    search.value='';
+    renderIconPicker();
+    setTimeout(function(){search.focus();},10);
+  }
+}
+function iconSearchKeydown(ev){
+  if(ev.key==='Enter'){
+    ev.preventDefault();
+    var first=document.querySelector('#icon-picker .icon-swatch');
+    if(first)first.click();
+  } else if(ev.key==='Escape'){
+    toggleIconDropdown(false);
+  }
+}
+function selectCategoryIcon(ic){
+  editingCategoryIcon=ic;
+  renderIconPicker();
+  updateIconSelectTrigger();
+  toggleIconDropdown(false);
+}
+// Close the icon dropdown when clicking anywhere outside it.
+document.addEventListener('click',function(e){
+  var wrap=document.getElementById('icon-select-wrap');
+  var panel=document.getElementById('icon-dropdown-panel');
+  if(wrap && panel && panel.style.display!=='none' && !wrap.contains(e.target)){
+    panel.style.display='none';
+  }
+});
+
+function renderColorPicker(){
+  var wrap=document.getElementById('color-picker');
+  var allColors=colorChoices.concat(customColorChoices);
+  var custom='<label class="color-swatch color-swatch-custom" title="Add a custom colour">'+
+    '<i class="ti ti-plus"></i>'+
+    '<input type="color" value="'+(editingCategoryColor||'#4f46e5')+'" oninput="addCustomColor(this.value)" />'+
+  '</label>';
+  wrap.innerHTML=allColors.map(function(c){
+    return '<button type="button" class="color-swatch'+(c===editingCategoryColor?' selected':'')+'" style="background:'+c+'" onclick="selectCategoryColor(\''+c+'\')" title="'+c+'"></button>';
+  }).join('')+custom;
+}
+function selectCategoryColor(c){
+  editingCategoryColor=c;
+  renderColorPicker();
+}
+/* Adds a user-picked colour to the palette (persisted so it's available
+   for future categories too) and selects it immediately. */
+function addCustomColor(hex){
+  hex=(hex||'').toLowerCase();
+  if(colorChoices.indexOf(hex)===-1 && customColorChoices.indexOf(hex)===-1){
+    customColorChoices.push(hex);
+    localStorage.setItem('cam_custom_colors',JSON.stringify(customColorChoices));
+  }
+  editingCategoryColor=hex;
+  renderColorPicker();
+}
+
+function renderSubcatEditor(){
+  var wrap=document.getElementById('subcat-list');
+  if(!editingSubcats.length){
+    wrap.innerHTML='<div class="kit-check-row" style="cursor:default"><span class="kc-name" style="color:var(--muted)">No sub-categories yet — items in this category will just skip the sub-category field.</span></div>';
+    return;
+  }
+  wrap.innerHTML=editingSubcats.map(function(s,i){
+    return '<div class="kit-check-row" style="cursor:default">'+
+      '<span class="kc-name">'+s.label+'</span>'+
+      '<span class="kc-id">'+s.v+'</span>'+
+      '<button type="button" class="btn btn-icon btn-sm" onclick="removeSubcatRow('+i+')" title="Remove" style="color:var(--red)"><i class="ti ti-x"></i></button>'+
+    '</div>';
+  }).join('');
+}
+function addSubcatRow(){
+  var input=document.getElementById('subcat-new-label');
+  var label=input.value.trim();
+  if(!label){showToast('Enter a sub-category name first','ti-alert-triangle',true);return;}
+  var v=slugify(label).toUpperCase();
+  if(editingSubcats.find(function(s){return s.v===v;})){showToast('That sub-category already exists','ti-alert-triangle',true);return;}
+  editingSubcats.push({v:v,label:label});
+  input.value='';
+  renderSubcatEditor();
+}
+function removeSubcatRow(i){
+  editingSubcats.splice(i,1);
+  renderSubcatEditor();
+}
+
+function openCategoryForm(cat){
+  editingCategoryKey=cat?cat.key:null;
+  document.getElementById('category-form-title').textContent=cat?'Edit category':'New category';
+  document.getElementById('cat-label').value=cat?cat.label:'';
+  var prefixInput=document.getElementById('cat-prefix');
+  prefixInput.value=cat?catPrefix(cat):'';
+  // For edits, treat the prefix as already set (don't auto-overwrite it
+  // if the name changes); for new categories, let it auto-suggest.
+  prefixInput.dataset.touched=cat?'1':'';
+  editingCategoryIcon=cat?cat.icon:iconChoices[0];
+  editingCategoryColor=cat?cat.color:colorChoices[categories.length%colorChoices.length];
+  editingSubcats=(cat&&cat.subcats)?cat.subcats.slice():[];
+  updateCatKeyPreview();
+  updateIconSelectTrigger();
+  toggleIconDropdown(false);
+  renderIconPicker();
+  renderColorPicker();
+  renderSubcatEditor();
+  document.getElementById('category-form-wrap').style.display='block';
+  document.getElementById('category-form-wrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function closeCategoryForm(){
+  editingCategoryKey=null;
+  toggleIconDropdown(false);
+  document.getElementById('category-form-wrap').style.display='none';
+}
+
+function saveCategory(){
+  var label=document.getElementById('cat-label').value.trim();
+  if(!label){showToast('Enter a category name','ti-alert-triangle',true);return;}
+  var prefix=sanitizePrefix(document.getElementById('cat-prefix').value)||sanitizePrefix(label).slice(0,4);
+  if(!prefix){showToast('Enter an ID prefix (letters/numbers only)','ti-alert-triangle',true);return;}
+  var prefixClash=categories.find(function(c){
+    return catPrefix(c).toUpperCase()===prefix.toUpperCase() && c.key!==editingCategoryKey;
+  });
+  if(prefixClash){showToast('Prefix "'+prefix+'" is already used by "'+prefixClash.label+'"','ti-x',true);return;}
+  if(editingCategoryKey){
+    var cat=findCategory(editingCategoryKey);
+    if(!cat)return;
+    cat.label=label;
+    cat.icon=editingCategoryIcon;
+    cat.color=editingCategoryColor;
+    cat.prefix=prefix;
+    cat.subcats=editingSubcats.slice();
+    showToast('Category "'+label+'" updated','ti-check',false);
+  } else {
+    var key=slugify(label);
+    if(!key){showToast('Enter a valid category name','ti-alert-triangle',true);return;}
+    if(findCategory(key)){showToast('A category with that name already exists','ti-x',true);return;}
+    categories.push({key:key,label:label,icon:editingCategoryIcon,color:editingCategoryColor,prefix:prefix,subcats:editingSubcats.slice()});
+    showToast('Category "'+label+'" created','ti-check',false);
+  }
+  save();
+  closeCategoryForm();
+  refreshCategoryDependentUI();
+}
+
+function editCategory(key){
+  var cat=findCategory(key);
+  if(cat)openCategoryForm(cat);
+}
+
+function deleteCategory(key){
+  var cat=findCategory(key);
+  if(!cat)return;
+  var inUse=inventory.filter(function(x){return x.category===key;}).length;
+  if(inUse){
+    showToast('Can\'t delete — '+inUse+' item'+(inUse===1?'':'s')+' still '+(inUse===1?'uses':'use')+' "'+cat.label+'". Reassign or remove them first.','ti-alert-triangle',true);
+    return;
+  }
+  if(!confirm('Delete category "'+cat.label+'"? This cannot be undone.'))return;
+  categories=categories.filter(function(c){return c.key!==key;});
+  save();
+  refreshCategoryDependentUI();
+  showToast('Category deleted','ti-check',false);
+}
+
+/* Called after any category add/edit/delete so every part of the UI that
+   depends on the category list (filter chips, stat cards, the Add-item
+   category select, the Activity Log filter) picks up the change immediately. */
+function refreshCategoryDependentUI(){
+  renderCategories();
+  populateNewCatSelect();
+  populateLogCatSelect();
+  updateNewSubcatOptions();
+  updateNewIdPreview();
+  renderInventory();
 }
 
 /* Quick check-out/in from the Kits tab card (prompts for name like quickAction does) */
@@ -2503,9 +2971,12 @@ function showToast(msg,icon,err){
 }
 
 /* ── INIT ── */
+populateNewCatSelect();
+populateLogCatSelect();
 renderStats();
 populateKitSelect();
 updateNewSubcatOptions();
+updateNewIdPreview();
 </script>
 </div><!-- /app-root -->
 </body>
