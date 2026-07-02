@@ -1408,7 +1408,7 @@
    It looks like: https://script.google.com/macros/s/AKfycb..xyz../exec
    See Code.gs + the setup guide for how to get this.
    ========================================================================= */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyC_EobzezGRtScL7r9bEab2ehH3zTPJibAWxtvbvcWNhk5f4ivTU75qJDRff7bedJp/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbx8x8jYhQ_tv_G8S2-C5hpEUHrVrapN5pJ_jEDCT4taHNBbvAuFChm4zXf4We30dTz1/exec";
 
 /* ── DATA ── */
 /* Categories are now user-editable (see the Categories tab) instead of
@@ -2490,6 +2490,7 @@ function saveCategory(){
     return catPrefix(c).toUpperCase()===prefix.toUpperCase() && c.key!==editingCategoryKey;
   });
   if(prefixClash){showToast('Prefix "'+prefix+'" is already used by "'+prefixClash.label+'"','ti-x',true);return;}
+  var savedCat;
   if(editingCategoryKey){
     var cat=findCategory(editingCategoryKey);
     if(!cat)return;
@@ -2498,17 +2499,20 @@ function saveCategory(){
     cat.color=editingCategoryColor;
     cat.prefix=prefix;
     cat.subcats=editingSubcats.slice();
+    savedCat=cat;
     showToast('Category "'+label+'" updated','ti-check',false);
   } else {
     var key=slugify(label);
     if(!key){showToast('Enter a valid category name','ti-alert-triangle',true);return;}
     if(findCategory(key)){showToast('A category with that name already exists','ti-x',true);return;}
-    categories.push({key:key,label:label,icon:editingCategoryIcon,color:editingCategoryColor,prefix:prefix,subcats:editingSubcats.slice()});
+    savedCat={key:key,label:label,icon:editingCategoryIcon,color:editingCategoryColor,prefix:prefix,subcats:editingSubcats.slice()};
+    categories.push(savedCat);
     showToast('Category "'+label+'" created','ti-check',false);
   }
   save();
   closeCategoryForm();
   refreshCategoryDependentUI();
+  syncCategoryToSheets(savedCat);
 }
 
 function editCategory(key){
@@ -2529,6 +2533,7 @@ function deleteCategory(key){
   save();
   refreshCategoryDependentUI();
   showToast('Category deleted','ti-check',false);
+  deleteCategoryFromSheets(key);
 }
 
 /* Called after any category add/edit/delete so every part of the UI that
@@ -2859,6 +2864,13 @@ async function bootstrapSheets(){
         body:JSON.stringify({action:'bootstrap_kits',kits:kits})
       });
     }
+    if(categories.length){
+      await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'bootstrap_categories',categories:categories})
+      });
+    }
   }catch(err){ /* silent — next sync attempt will retry naturally */ }
 }
 
@@ -2904,6 +2916,37 @@ async function deleteItemFromSheets(itemId){
   }catch(err){ /* silent */ }
 }
 
+/* Upserts one category's current state (label/icon/colour/prefix/subcats)
+   into the Categories sheet row, so every device sees the same set of
+   categories instead of each browser having its own local list. */
+async function syncCategoryToSheets(category){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'sync_category',category:category})
+    });
+    setSyncStatus('ok','Synced to Sheets');
+  }catch(err){
+    setSyncStatus('err','Sync failed');
+  }
+}
+
+/* Removes a category's row from the Categories sheet. */
+async function deleteCategoryFromSheets(categoryKey){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'delete_category',categoryKey:categoryKey})
+    });
+  }catch(err){ /* silent */ }
+}
+
 /* Pulls the Inventory sheet down and merges it into local state.
    Sheet data wins on overlapping fields, so multiple devices stay
    in sync with whatever was checked in/out elsewhere. */
@@ -2917,6 +2960,7 @@ async function loadFromSheets(){
     if(data.error)throw new Error(data.error);
     var remote=data.items||[];
     var remoteKits=data.kits||[];
+    var remoteCategories=data.categories||[];
     var remoteLog=data.log||[];
     var seeded=false;
     if(remote.length){
@@ -2932,6 +2976,16 @@ async function loadFromSheets(){
       if(document.getElementById('panel-kits').classList.contains('active'))renderKits();
       populateKitSelect();
     } else if(kits.length){
+      seeded=true;
+    }
+    if(remoteCategories.length){
+      categories=remoteCategories;
+      categories.forEach(function(c){
+        if(!c.prefix)c.prefix=(c.key||'').replace(/[^a-z0-9]/gi,'').slice(0,4).toUpperCase()||'ITM';
+      });
+      save();
+      refreshCategoryDependentUI();
+    } else if(categories.length){
       seeded=true;
     }
     // The Activity Log sheet is the shared source of truth across every
