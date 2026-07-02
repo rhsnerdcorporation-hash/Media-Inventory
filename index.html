@@ -1457,10 +1457,10 @@ function closeSidebar(){
 
 /* ── STATS ── */
 function renderStats(){
-  var cats = ['camera','lens','memory','case','charger','battery','microphone','tripod','drone','osmium','lenscap'];
-  var labels = ['Cameras','Lenses','Memory cards','Cases','Chargers','Batteries','Microphones','Tripods','Drones','Osmium','Lens caps'];
-  var icons = ['ti-camera','ti-eye','ti-device-sd-card','ti-briefcase','ti-plug','ti-battery-2','ti-microphone','ti-broadcast','ti-drone','ti-video','ti-circle-dot'];
-  var iconCls = ['cam','lens','mem','case','chg','bat','mic','tri','drn','osm','cap'];
+  var cats = ['camera','lens','lenscap','memory','charger','battery','microphone','case','tripod','drone','osmium'];
+  var labels = ['Cameras','Lenses','Lens caps','Memory cards','Chargers','Batteries','Microphones','Cases','Tripods','Drones','Osmium'];
+  var icons = ['ti-camera','ti-eye','ti-circle-dot','ti-device-sd-card','ti-plug','ti-battery-2','ti-microphone','ti-briefcase','ti-broadcast','ti-drone','ti-video'];
+  var iconCls = ['cam','lens','cap','mem','chg','bat','mic','case','tri','drn','osm'];
   var row = document.getElementById('stats-row');
   row.innerHTML = '';
   var totalAvail = 0, totalAll = 0;
