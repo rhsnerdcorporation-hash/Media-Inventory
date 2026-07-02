@@ -1389,10 +1389,10 @@ function fmtTime(iso){
 }
 
 function catIcon(cat){
-  return{camera:'ti-camera',lens:'ti-eye',memory:'ti-device-sd-card',case:'ti-briefcase',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone', tripod:'ti-broadcast', drone:'ti-drone', osmium:'ti-video', lenscap:'ti-circle-dot'}[cat]||'ti-package';
+  return{camera:'ti-camera',lens:'ti-eye', lenscap:'ti-circle-dot', memory:'ti-device-sd-card',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone',case:'ti-briefcase', tripod:'ti-broadcast', drone:'ti-drone', osmium:'ti-video'}[cat]||'ti-package';
 }
 function catClass(cat){
-  return{camera:'ici-camera',lens:'ici-lens',memory:'ici-memory',case:'ici-case',charger:'ici-charger',battery:'ici-battery',microphone:'ici-microphone', tripod:'ici-tripod', drone:'ici-drone', osmium:'ici-osmium', lenscap:'ici-lenscap'}[cat]||'';
+  return{camera:'ici-camera',lens:'ici-lens',lenscap:'ici-lenscap',memory:'ici-memory',charger:'ici-charger',battery:'ici-battery',microphone:'ici-microphone',case:'ici-case', tripod:'ici-tripod', drone:'ici-drone', osmium:'ici-osmium'}[cat]||'';
 }
 
 /* Minor / sub-categories, only offered when the item's main category is
