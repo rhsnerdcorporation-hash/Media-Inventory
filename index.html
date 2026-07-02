@@ -363,33 +363,49 @@
   .kit-member-chip .rm:hover { opacity: 1; }
   .kit-card-actions { display: flex; gap: 8px; margin-top: 12px; }
 
-  /* Kits grid layout — cards flow into columns instead of one long
-     stacked list, so a large kit collection stays scannable. */
+  /* Kits table layout — one row per kit (Name / Items / Status / Actions)
+     with an optional expandable detail row for the item chips, so a large
+     kit collection stays compact and scannable instead of one long list
+     of tall cards. */
   .kit-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
   .kit-toolbar .input-field { flex: 1; min-width: 200px; }
   .kit-toolbar .select-field { min-width: 170px; }
-  .kit-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 14px;
-    align-items: start;
+
+  .kit-table-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
   }
-  .kit-grid > .kit-card {
-    margin-bottom: 0;
-    display: flex;
-    flex-direction: column;
+  .kit-table { width: 100%; border-collapse: collapse; }
+  .kit-table thead th {
+    text-align: left; font-size: 10.5px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface);
   }
-  .kit-grid > .empty { grid-column: 1 / -1; }
-  /* Member chips are capped to a few rows per card; a "show more" toggle
-     reveals the rest instead of every card growing to fit its longest list. */
-  .kit-show-more {
-    font-size: 11px; font-weight: 600; color: var(--blue);
-    cursor: pointer; margin-top: 8px;
-    display: inline-flex; align-items: center; gap: 4px;
-    background: none; border: none; padding: 0;
+  .kit-table thead th.kt-actions-h { text-align: right; }
+  .kit-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+  .kit-table tbody tr.kit-row { border-top: 1px solid var(--border); cursor: pointer; transition: background 0.12s; }
+  .kit-table tbody tr.kit-row:first-child { border-top: none; }
+  .kit-table tbody tr.kit-row:hover { background: var(--surface); }
+  .kit-row-name { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); }
+  .kit-row-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: #ede9fe; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
-  .kit-show-more:hover { text-decoration: underline; }
-  .kit-show-more i { font-size: 13px; }
+  .kit-row-icon i { font-size: 15px; color: #7c3aed; }
+  .kit-row-items { display: inline-flex; align-items: center; gap: 6px; color: var(--mid); }
+  .kit-row-items i { font-size: 13px; color: var(--muted); transition: transform 0.15s; }
+  .kit-row-items.expanded i { transform: rotate(180deg); }
+  .kit-row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .kit-detail-row { border-top: none !important; cursor: default; }
+  .kit-detail-row:hover { background: none !important; }
+  .kit-detail-row td { padding: 0 16px 14px 56px; background: var(--surface); }
+  .kit-detail-row .kit-members { margin-top: 0; }
+  .kit-table .empty { padding: 32px 16px; }
 
   .kit-check-list {
     border: 1px solid var(--border); border-radius: var(--radius);
@@ -1261,7 +1277,19 @@
             <option value="out">Has items out / missing</option>
           </select>
         </div>
-        <div class="kit-grid" id="kit-list"></div>
+        <div class="kit-table-wrap">
+          <table class="kit-table">
+            <thead>
+              <tr>
+                <th>Kit</th>
+                <th>Items</th>
+                <th>Status</th>
+                <th class="kt-actions-h">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="kit-list"></tbody>
+          </table>
+        </div>
 
         <div class="card-wrap" id="kit-form-wrap" style="display:none;margin-top:18px;max-width:560px">
           <div class="card-wrap-header"><h2 id="kit-form-title">New kit</h2></div>
@@ -2224,10 +2252,9 @@ function kitStatusSummary(kit){
   return{label:'All available',cls:'s-in'};
 }
 
-/* Tracks which kit cards have their full member list expanded, so
-   toggling one doesn't reset the others on re-render. */
+/* Tracks which kit rows have their item list expanded, so toggling one
+   doesn't reset the others on re-render. */
 var expandedKits={};
-var KIT_CHIP_LIMIT=6;
 
 function toggleKitMembers(id){
   expandedKits[id]=!expandedKits[id];
@@ -2237,7 +2264,7 @@ function toggleKitMembers(id){
 function renderKits(){
   var list=document.getElementById('kit-list');
   if(!kits.length){
-    list.innerHTML='<div class="empty"><i class="ti ti-stack-2"></i><p>No kits yet. Create one to bundle items you check out together.</p></div>';
+    list.innerHTML='<tr><td colspan="4"><div class="empty"><i class="ti ti-stack-2"></i><p>No kits yet. Create one to bundle items you check out together.</p></div></td></tr>';
     return;
   }
   var searchEl=document.getElementById('kit-search');
@@ -2262,7 +2289,7 @@ function renderKits(){
   });
 
   if(!filtered.length){
-    list.innerHTML='<div class="empty"><i class="ti ti-stack-2"></i><p>No kits match your search or filter.</p></div>';
+    list.innerHTML='<tr><td colspan="4"><div class="empty"><i class="ti ti-stack-2"></i><p>No kits match your search or filter.</p></div></td></tr>';
     return;
   }
 
@@ -2270,32 +2297,22 @@ function renderKits(){
     var items=kitItems(kit);
     var summary=kitStatusSummary(kit);
     var expanded=!!expandedKits[kit.id];
-    var chipsArr=items.map(function(x){
-      var cls=x.status==='out'?'m-out':x.status==='missing'?'m-missing':'';
-      return '<span class="kit-member-chip '+cls+'"><i class="ti '+catIcon(x.category)+'" style="font-size:12px"></i>'+x.name+'</span>';
-    });
-    var visible=expanded?chipsArr:chipsArr.slice(0,KIT_CHIP_LIMIT);
-    var hidden=chipsArr.length-visible.length;
-    var chipsHtml=visible.join('')||'<span class="kit-meta">No items added yet</span>';
-    var moreBtn=hidden>0
-      ? '<button type="button" class="kit-show-more" onclick="toggleKitMembers(\''+kit.id+'\')"><i class="ti ti-chevron-down"></i> +'+hidden+' more</button>'
-      : (expanded&&chipsArr.length>KIT_CHIP_LIMIT
-        ? '<button type="button" class="kit-show-more" onclick="toggleKitMembers(\''+kit.id+'\')"><i class="ti ti-chevron-up"></i> Show less</button>'
-        : '');
-    return '<div class="kit-card">'+
-      '<div class="kit-card-top">'+
-        '<div class="kit-icon-wrap"><i class="ti ti-stack-2"></i></div>'+
-        '<div style="flex:1;min-width:0">'+
-          '<div class="kit-name">'+kit.name+'</div>'+
-          '<div class="kit-meta">'+items.length+' item'+(items.length===1?'':'s')+' · <span class="'+(summary.cls?'':'avail-ok')+'">'+summary.label+'</span></div>'+
-        '</div>'+
+    var row='<tr class="kit-row" onclick="toggleKitMembers(\''+kit.id+'\')">'+
+      '<td><div class="kit-row-name"><div class="kit-row-icon"><i class="ti ti-stack-2"></i></div>'+kit.name+'</div></td>'+
+      '<td><span class="kit-row-items'+(expanded?' expanded':'')+'">'+items.length+' item'+(items.length===1?'':'s')+' <i class="ti ti-chevron-down"></i></span></td>'+
+      '<td><span class="status-pill '+(summary.cls||'')+'">'+summary.label+'</span></td>'+
+      '<td><div class="kit-row-actions" onclick="event.stopPropagation()">'+
         '<button class="btn btn-icon btn-sm" onclick="printKitQR(\''+kit.id+'\')" title="Print kit QR label"><i class="ti ti-qrcode"></i></button>'+
         '<button class="btn btn-icon btn-sm" onclick="editKit(\''+kit.id+'\')" title="Edit kit"><i class="ti ti-pencil"></i></button>'+
-        '<button class="btn btn-icon btn-sm" onclick="deleteKit(\''+kit.id+'\')" title="Delete kit"><i class="ti ti-trash"></i></button>'+
-      '</div>'+
-      '<div class="kit-members">'+chipsHtml+'</div>'+
-      moreBtn+
-    '</div>';
+        '<button class="btn btn-icon btn-sm" onclick="deleteKit(\''+kit.id+'\')" title="Delete kit" style="color:var(--red)"><i class="ti ti-trash"></i></button>'+
+      '</div></td>'+
+    '</tr>';
+    if(!expanded)return row;
+    var chipsHtml=items.map(function(x){
+      var cls=x.status==='out'?'m-out':x.status==='missing'?'m-missing':'';
+      return '<span class="kit-member-chip '+cls+'"><i class="ti '+catIcon(x.category)+'" style="font-size:12px"></i>'+x.name+'</span>';
+    }).join('')||'<span class="kit-meta">No items added yet</span>';
+    return row+'<tr class="kit-detail-row"><td colspan="4"><div class="kit-members">'+chipsHtml+'</div></td></tr>';
   }).join('');
 }
 
