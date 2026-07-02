@@ -352,7 +352,7 @@
   .ici-case   { background: #fef3c7; } .ici-case i   { color: var(--amber); }
   .ici-tripod { background: #fff3f3; } .ici-tripod i { color: #ed3a3a; }
   .ici-drone { background: #ecfeff; } .ici-drone i { color: #0e7490; }
-  .ici-osmium { background: #f4f4f5; } .ici-osmium i { color: #52525b; }
+  .ici-osmo { background: #f4f4f5; } .ici-osmo i { color: #52525b; }
 
   .item-info { flex: 1; min-width: 0; }
   .subcat-pill {
@@ -798,7 +798,7 @@
   .cat-case    { background: var(--amber-bg); color: var(--amber); }
   .cat-tripod { background: #fff3f3; color: #ed3a3a; }
   .cat-drone { background: #ecfeff; color: #0e7490; }
-  .cat-osmium { background: #f4f4f5; color: #52525b; }
+  .cat-osmo { background: #f4f4f5; color: #52525b; }
 
   .cond-pill {
     font-size: 11px; font-weight: 500; padding: 2px 8px;
@@ -1196,7 +1196,7 @@
           <button class="filter-chip" onclick="setFilter('case')" data-filter="case">Cases</button>
           <button class="filter-chip" onclick="setFilter('tripod')" data-filter="tripod">Tripods</button>
           <button class="filter-chip" onclick="setFilter('drone')" data-filter="drone">Drones</button>
-          <button class="filter-chip" onclick="setFilter('osmium')" data-filter="osmium">Osmium</button>
+          <button class="filter-chip" onclick="setFilter('osmo')" data-filter="osmo">Osmos</button>
           <button class="filter-chip" onclick="setFilter('out')" data-filter="out" style="margin-left:auto">Checked out</button>
         </div>
         <div class="filter-bar" id="minor-filter-bar" style="display:none">
@@ -1275,7 +1275,7 @@
                 <option value="case">Cases</option>
                 <option value="tripod">Tripods</option>
                 <option value="drone">Drones</option>
-                <option value="osmium">Osmium</option>
+                <option value="osmo">Osmos</option>
               </select>
             </div>
           </div>
@@ -1309,7 +1309,7 @@
                     <option value="case">Case</option>
                     <option value="tripod">Tripod</option>
                     <option value="drone">Drone</option>
-                    <option value="osmium">Osmium</option>
+                    <option value="osmo">Osmo</option>
                   </select>
                 </div>
                 <div class="form-block" id="new-subcat-wrap" style="display:none">
@@ -1389,10 +1389,10 @@ function fmtTime(iso){
 }
 
 function catIcon(cat){
-  return{camera:'ti-camera',lens:'ti-eye', lenscap:'ti-circle-dot', memory:'ti-device-sd-card',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone',case:'ti-briefcase', tripod:'ti-broadcast', drone:'ti-drone', osmium:'ti-video'}[cat]||'ti-package';
+  return{camera:'ti-camera',lens:'ti-eye', lenscap:'ti-circle-dot', memory:'ti-device-sd-card',charger:'ti-plug',battery:'ti-battery-2',microphone:'ti-microphone',case:'ti-briefcase', tripod:'ti-broadcast', drone:'ti-drone', osmo:'ti-video'}[cat]||'ti-package';
 }
 function catClass(cat){
-  return{camera:'ici-camera',lens:'ici-lens',lenscap:'ici-lenscap',memory:'ici-memory',charger:'ici-charger',battery:'ici-battery',microphone:'ici-microphone',case:'ici-case', tripod:'ici-tripod', drone:'ici-drone', osmium:'ici-osmium'}[cat]||'';
+  return{camera:'ici-camera',lens:'ici-lens',lenscap:'ici-lenscap',memory:'ici-memory',charger:'ici-charger',battery:'ici-battery',microphone:'ici-microphone',case:'ici-case', tripod:'ici-tripod', drone:'ici-drone', osmo:'ici-osmo'}[cat]||'';
 }
 
 /* Minor / sub-categories, only offered when the item's main category is
@@ -1457,8 +1457,8 @@ function closeSidebar(){
 
 /* ── STATS ── */
 function renderStats(){
-  var cats = ['camera','lens','lenscap','memory','charger','battery','microphone','case','tripod','drone','osmium'];
-  var labels = ['Cameras','Lenses','Lens caps','Memory cards','Chargers','Batteries','Microphones','Cases','Tripods','Drones','Osmium'];
+  var cats = ['camera','lens','lenscap','memory','charger','battery','microphone','case','tripod','drone','osmo'];
+  var labels = ['Cameras','Lenses','Lens caps','Memory cards','Chargers','Batteries','Microphones','Cases','Tripods','Drones','Osmo'];
   var icons = ['ti-camera','ti-eye','ti-circle-dot','ti-device-sd-card','ti-plug','ti-battery-2','ti-microphone','ti-briefcase','ti-broadcast','ti-drone','ti-video'];
   var iconCls = ['cam','lens','cap','mem','chg','bat','mic','case','tri','drn','osm'];
   var row = document.getElementById('stats-row');
