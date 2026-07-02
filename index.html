@@ -249,13 +249,13 @@
   .stat-card.active-lens .stat-num, .stat-card.active-lens .stat-lbl { color: #0284c7; }
   .stat-card.active-lens .stat-avail { color: #0ea5e9; }
 
+  .stat-card.active-cap   { background: #fefce8; border-color: #fde047; }
+  .stat-card.active-cap  .stat-num, .stat-card.active-cap   .stat-lbl { color: #a16207; }
+  .stat-card.active-cap   .stat-avail { color: #ca8a04; }
+
   .stat-card.active-mem  { background: #f0fdf4; border-color: #86efac; }
   .stat-card.active-mem  .stat-num, .stat-card.active-mem  .stat-lbl { color: var(--green); }
   .stat-card.active-mem  .stat-avail { color: #22c55e; }
-
-  .stat-card.active-case { background: #fef3c7; border-color: #fcd34d; }
-  .stat-card.active-case .stat-num, .stat-card.active-case .stat-lbl { color: var(--amber); }
-  .stat-card.active-case .stat-avail { color: #f59e0b; }
 
   .stat-card.active-chg  { background: #fce7f3; border-color: #f9a8d4; }
   .stat-card.active-chg  .stat-num, .stat-card.active-chg  .stat-lbl { color: #db2777; }
@@ -269,6 +269,10 @@
   .stat-card.active-mic  .stat-num, .stat-card.active-mic  .stat-lbl { color: #6d28d9; }
   .stat-card.active-mic  .stat-avail { color: #7c3aed; }
 
+  .stat-card.active-case { background: #fef3c7; border-color: #fcd34d; }
+  .stat-card.active-case .stat-num, .stat-card.active-case .stat-lbl { color: var(--amber); }
+  .stat-card.active-case .stat-avail { color: #f59e0b; }
+
   .stat-card.active-tri  { background: #fee9e9; border-color: #fa8b8b; }
   .stat-card.active-tri  .stat-num, .stat-card.active-tri  .stat-lbl { color: #d92828; }
   .stat-card.active-tri  .stat-avail { color: #ed3a3a; }
@@ -280,10 +284,6 @@
   .stat-card.active-osm  { background: #f4f4f5; border-color: #d4d4d8; }
   .stat-card.active-osm  .stat-num, .stat-card.active-osm  .stat-lbl { color: #52525b; }
   .stat-card.active-osm  .stat-avail { color: #71717a; }
-
-  .stat-card.active-lc   { background: #fefce8; border-color: #fde047; }
-  .stat-card.active-lc   .stat-num, .stat-card.active-lc   .stat-lbl { color: #a16207; }
-  .stat-card.active-lc   .stat-avail { color: #ca8a04; }
 
   .stat-icon-all { background: #e8e8ec; }
   .stat-icon-all i { color: #606068; }
@@ -301,15 +301,15 @@
   .stat-icon i { font-size: 18px; }
   .stat-icon.cam { background: #e0e7ff; } .stat-icon.cam i { color: #4f46e5; }
   .stat-icon.lens { background: #e0f2fe; } .stat-icon.lens i { color: #0284c7; }
+  .stat-icon.cap { background: #fefce8; } .stat-icon.cap i { color: #a16207; }
   .stat-icon.mem { background: #f0fdf4; } .stat-icon.mem i { color: var(--green); }
-  .stat-icon.case { background: #fef3c7; } .stat-icon.case i { color: var(--amber); }
   .stat-icon.chg { background: #fce7f3; } .stat-icon.chg i { color: #db2777; }
   .stat-icon.bat { background: #ffedd5; } .stat-icon.bat i { color: #c2410c; }
   .stat-icon.mic { background: #ede9fe; } .stat-icon.mic i { color: #6d28d9; }
+  .stat-icon.case { background: #fef3c7; } .stat-icon.case i { color: var(--amber); }
   .stat-icon.tri { background: #fee9e9; } .stat-icon.tri i { color: #d92828; }
   .stat-icon.drn { background: #ecfeff; } .stat-icon.drn i { color: #0e7490; }
   .stat-icon.osm { background: #f4f4f5; } .stat-icon.osm i { color: #52525b; }
-  .stat-icon.lc { background: #fefce8; } .stat-icon.lc i { color: #a16207; }
   .stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: var(--ink); }
   .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .stat-avail { font-size: 11px; margin-top: 4px; font-weight: 500; }
@@ -344,15 +344,15 @@
   .item-cat-icon i { font-size: 22px; }
   .ici-camera { background: #e0e7ff; } .ici-camera i { color: #4f46e5; }
   .ici-lens   { background: #e0f2fe; } .ici-lens i   { color: #0284c7; }
+  .ici-lenscap { background: #fefce8; } .ici-lenscap i { color: #a16207; }
   .ici-memory { background: #f0fdf4; } .ici-memory i { color: var(--green); }
-  .ici-case   { background: #fef3c7; } .ici-case i   { color: var(--amber); }
   .ici-charger { background: #fce7f3; } .ici-charger i { color: #db2777; }
   .ici-battery { background: #ffedd5; } .ici-battery i { color: #c2410c; }
   .ici-microphone { background: #f5f3ff; } .ici-microphone i { color: #7c3aed; }
+  .ici-case   { background: #fef3c7; } .ici-case i   { color: var(--amber); }
   .ici-tripod { background: #fff3f3; } .ici-tripod i { color: #ed3a3a; }
   .ici-drone { background: #ecfeff; } .ici-drone i { color: #0e7490; }
   .ici-osmium { background: #f4f4f5; } .ici-osmium i { color: #52525b; }
-  .ici-lenscap { background: #fefce8; } .ici-lenscap i { color: #a16207; }
 
   .item-info { flex: 1; min-width: 0; }
   .subcat-pill {
@@ -790,15 +790,15 @@
   }
   .cat-camera  { background: #e0e7ff; color: #4f46e5; }
   .cat-lens    { background: #e0f2fe; color: #0284c7; }
+  .cat-lenscap { background: #fefce8; color: #a16207; }
   .cat-memory  { background: var(--green-bg); color: var(--green); }
-  .cat-case    { background: var(--amber-bg); color: var(--amber); }
   .cat-charger { background: #fce7f3; color: #db2777; }
   .cat-battery { background: #ecfdf5; color: #059669; }
   .cat-microphone { background: #f5f3ff; color: #7c3aed; }
+  .cat-case    { background: var(--amber-bg); color: var(--amber); }
   .cat-tripod { background: #fff3f3; color: #ed3a3a; }
   .cat-drone { background: #ecfeff; color: #0e7490; }
   .cat-osmium { background: #f4f4f5; color: #52525b; }
-  .cat-lenscap { background: #fefce8; color: #a16207; }
 
   .cond-pill {
     font-size: 11px; font-weight: 500; padding: 2px 8px;
@@ -1188,15 +1188,15 @@
           <button class="filter-chip active" onclick="setFilter('all')" data-filter="all">All</button>
           <button class="filter-chip" onclick="setFilter('camera')" data-filter="camera"><i class="ti ti-camera" style="font-size:13px;vertical-align:-2px;margin-right:3px"></i>Cameras</button>
           <button class="filter-chip" onclick="setFilter('lens')" data-filter="lens">Lenses</button>
+          <button class="filter-chip" onclick="setFilter('lenscap')" data-filter="lenscap">Lens caps</button>
           <button class="filter-chip" onclick="setFilter('memory')" data-filter="memory">Memory cards</button>
-          <button class="filter-chip" onclick="setFilter('case')" data-filter="case">Cases</button>
           <button class="filter-chip" onclick="setFilter('charger')" data-filter="charger">Chargers</button>
           <button class="filter-chip" onclick="setFilter('battery')" data-filter="battery">Batteries</button>
           <button class="filter-chip" onclick="setFilter('microphone')" data-filter="microphone">Microphones</button>
+          <button class="filter-chip" onclick="setFilter('case')" data-filter="case">Cases</button>
           <button class="filter-chip" onclick="setFilter('tripod')" data-filter="tripod">Tripods</button>
           <button class="filter-chip" onclick="setFilter('drone')" data-filter="drone">Drones</button>
           <button class="filter-chip" onclick="setFilter('osmium')" data-filter="osmium">Osmium</button>
-          <button class="filter-chip" onclick="setFilter('lenscap')" data-filter="lenscap">Lens caps</button>
           <button class="filter-chip" onclick="setFilter('out')" data-filter="out" style="margin-left:auto">Checked out</button>
         </div>
         <div class="filter-bar" id="minor-filter-bar" style="display:none">
@@ -1267,15 +1267,15 @@
                 <option value="">All categories</option>
                 <option value="camera">Cameras</option>
                 <option value="lens">Lenses</option>
+                <option value="lenscap">Lens caps</option>
                 <option value="memory">Memory cards</option>
-                <option value="case">Cases</option>
                 <option value="charger">Chargers</option>
                 <option value="battery">Batteries</option>
                 <option value="microphone">Microphones</option>
+                <option value="case">Cases</option>
                 <option value="tripod">Tripods</option>
                 <option value="drone">Drones</option>
                 <option value="osmium">Osmium</option>
-                <option value="lenscap">Lens caps</option>
               </select>
             </div>
           </div>
@@ -1301,15 +1301,15 @@
                   <select class="input-field select-full" id="new-cat" onchange="updateNewSubcatOptions()">
                     <option value="camera">Camera</option>
                     <option value="lens">Lens</option>
+                    <option value="lenscap">Lens Cap</option>
                     <option value="memory">Memory card</option>
-                    <option value="case">Case</option>
                     <option value="charger">Charger</option>
                     <option value="battery">Battery</option>
                     <option value="microphone">Microphone</option>
+                    <option value="case">Case</option>
                     <option value="tripod">Tripod</option>
                     <option value="drone">Drone</option>
                     <option value="osmium">Osmium</option>
-                    <option value="lenscap">Lens Cap</option>
                   </select>
                 </div>
                 <div class="form-block" id="new-subcat-wrap" style="display:none">
@@ -1460,7 +1460,7 @@ function renderStats(){
   var cats = ['camera','lens','memory','case','charger','battery','microphone','tripod','drone','osmium','lenscap'];
   var labels = ['Cameras','Lenses','Memory cards','Cases','Chargers','Batteries','Microphones','Tripods','Drones','Osmium','Lens caps'];
   var icons = ['ti-camera','ti-eye','ti-device-sd-card','ti-briefcase','ti-plug','ti-battery-2','ti-microphone','ti-broadcast','ti-drone','ti-video','ti-circle-dot'];
-  var iconCls = ['cam','lens','mem','case','chg','bat','mic','tri','drn','osm','lc'];
+  var iconCls = ['cam','lens','mem','case','chg','bat','mic','tri','drn','osm','cap'];
   var row = document.getElementById('stats-row');
   row.innerHTML = '';
   var totalAvail = 0, totalAll = 0;
