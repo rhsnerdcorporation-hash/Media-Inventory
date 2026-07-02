@@ -4,7 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Media Equipment Inventory</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='9' fill='%230f172a'/><g fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' transform='translate(6,6)'><path d='M5 7h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2'/><path d='M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0'/></g></svg>" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -1473,7 +1474,7 @@
    It looks like: https://script.google.com/macros/s/AKfycb..xyz../exec
    See Code.gs + the setup guide for how to get this.
    ========================================================================= */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbyINlhcE5WfOm3WYLXgYZs1RMh9SbK32rhk4_dJFoXJ7KzFbBOjQ20KzM2s2ngAkIvf/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbx8x8jYhQ_tv_G8S2-C5hpEUHrVrapN5pJ_jEDCT4taHNBbvAuFChm4zXf4We30dTz1/exec";
 
 /* ── DATA ── */
 /* Categories are now user-editable (see the Categories tab) instead of
@@ -2822,7 +2823,7 @@ function showKitResultCard(kit){
     document.getElementById('kit-return-checklist').innerHTML=outItems.map(function(x){
       var missingTag=x.status==='missing'?' <span class="status-pill s-missing" style="font-size:10px;padding:1px 6px">Missing</span>':'';
       return '<label class="kit-check-row">'+
-        '<input type="checkbox" class="kit-return-cb" value="'+x.id+'" checked />'+
+        '<input type="checkbox" class="kit-return-cb" value="'+x.id+'" />'+
         '<span class="kc-name"><i class="ti '+catIcon(x.category)+'" style="font-size:12px;margin-right:5px;color:var(--muted)"></i>'+x.name+missingTag+
           (x.lastWho?'<span class="kit-meta" style="display:block">with '+x.lastWho+(x.lastClass?' · '+x.lastClass:'')+'</span>':'')+
         '</span>'+
