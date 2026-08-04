@@ -1268,8 +1268,45 @@
       <div class="panel" id="panel-kits">
         <div class="section-header">
           <h2>Saved kits</h2>
-          <button class="btn btn-primary btn-sm" onclick="openKitForm()"><i class="ti ti-plus"></i> New kit</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="toggleKitTypeManager()"><i class="ti ti-tags"></i> Manage kit types</button>
+            <button class="btn btn-primary btn-sm" onclick="openKitForm()"><i class="ti ti-plus"></i> New kit</button>
+          </div>
         </div>
+
+        <div class="card-wrap" id="kit-type-manager-wrap" style="display:none;margin-bottom:18px">
+          <div class="card-wrap-header">
+            <h2>Kit types</h2>
+            <button class="btn btn-sm" onclick="openKitTypeForm()"><i class="ti ti-plus"></i> New type</button>
+          </div>
+          <div style="padding:14px 18px 18px" id="kit-type-list"></div>
+
+          <div id="kit-type-form-wrap" style="display:none;padding:0 18px 20px">
+            <div style="border-top:1px solid var(--border);padding-top:16px">
+              <h3 id="kit-type-form-title" style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:12px">New kit type</h3>
+              <div class="form-block" style="margin-bottom:14px">
+                <label>Type name</label>
+                <input type="text" class="input-field" id="kit-type-label" placeholder="e.g. Classroom kits" oninput="updateKitTypeKeyPreview()" />
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">Stored as: <code id="kit-type-key-preview">—</code></div>
+              </div>
+              <div class="form-block" style="margin-bottom:14px">
+                <label>Icon</label>
+                <select class="input-field select-full" id="kt-icon-select" onchange="renderKitTypeFormPreview()"></select>
+              </div>
+              <div class="form-block" style="margin-bottom:14px">
+                <label>Colour</label>
+                <div class="color-picker" id="kt-color-picker"></div>
+              </div>
+              <div class="kit-card-actions">
+                <button class="btn btn-primary" style="flex:1" onclick="saveKitType()"><i class="ti ti-check"></i> Save type</button>
+                <button class="btn" onclick="closeKitTypeForm()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar" id="kit-type-filter-bar"></div>
+
         <div class="kit-toolbar">
           <input type="text" class="input-field" id="kit-search" placeholder="Search kits or items…" oninput="renderKits()" />
           <select class="select-field" id="kit-status-filter" onchange="renderKits()">
@@ -1298,6 +1335,12 @@
             <div class="form-block" style="margin-bottom:14px">
               <label>Kit name</label>
               <input type="text" class="input-field" id="kit-name" placeholder="e.g. Media kit 1" />
+            </div>
+            <div class="form-block" style="margin-bottom:14px">
+              <label>Kit type</label>
+              <select class="input-field select-full" id="kit-type-select">
+                <option value="">No type</option>
+              </select>
             </div>
             <div class="form-block">
               <label>Items in this kit</label>
@@ -1359,6 +1402,13 @@
               <label>Colour</label>
               <div class="color-picker" id="color-picker"></div>
             </div>
+            <div class="form-block" style="margin-bottom:14px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                <input type="checkbox" id="cat-qr-enabled" checked onchange="editingCategoryQrEnabled=this.checked" style="width:15px;height:15px;accent-color:var(--ink);cursor:pointer" />
+                Items in this category can have their own QR code
+              </label>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">When off, items added to this category won't get a QR label generated — useful for things too small to tag, like lens caps.</div>
+            </div>
             <div class="form-block">
               <label>Sub-categories (optional)</label>
               <div class="kit-check-list" id="subcat-list" style="max-height:none"></div>
@@ -1395,6 +1445,7 @@
                 <option value="missing">Missing</option>
                 <option value="removed">Removed</option>
                 <option value="category">Category changes</option>
+                <option value="kittype">Kit type changes</option>
               </select>
               <select class="select-field" id="log-cat" onchange="renderLog()">
                 <option value="">All categories</option>
@@ -1440,6 +1491,15 @@
               </button>
             </div>
           </div>
+
+          <div class="qr-preview-box" id="item-qr-preview">
+            <div id="item-qr-canvas"></div>
+            <div class="qr-label-text" id="item-qr-label-text">—</div>
+            <div class="qr-sublabel">Print and attach this QR label to the item</div>
+            <button class="btn" style="margin-top:12px" onclick="downloadItemQR()">
+              <i class="ti ti-download"></i> Download QR label
+            </button>
+          </div>
         </div>
       </div>
     </div><!-- /content -->
@@ -1475,7 +1535,7 @@
    It looks like: https://script.google.com/macros/s/AKfycb..xyz../exec
    See Code.gs + the setup guide for how to get this.
    ========================================================================= */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbx8x8jYhQ_tv_G8S2-C5hpEUHrVrapN5pJ_jEDCT4taHNBbvAuFChm4zXf4We30dTz1/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzABShNLHv9jtQVAbAp-OTSkpoynam9hMH5YdGVsCIlnvUA7qhIQou8AEBxv2n5fGjk/exec";
 
 /* ── DATA ── */
 /* Categories are now user-editable (see the Categories tab) instead of
@@ -1484,19 +1544,30 @@ const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbx8x8jYhQ_tv_G8S
    first time the app runs. */
 function defaultCategories(){
   return [
-    {key:'camera',label:'Cameras',icon:'ti-camera',color:'#4f46e5',prefix:'CAM',subcats:[{v:'DMC-G7',label:'G7'},{v:'EOS-R50',label:'R50'}]},
-    {key:'lens',label:'Lenses',icon:'ti-eye',color:'#0284c7',prefix:'LENS',subcats:[{v:'55-210',label:'55-210'},{v:'45-150',label:'45-150'},{v:'14-42',label:'14-42'},{v:'14-30',label:'14-30'}]},
-    {key:'lenscap',label:'Lens caps',icon:'ti-circle-dot',color:'#a16207',prefix:'CAP',subcats:[]},
-    {key:'memory',label:'Memory cards',icon:'ti-device-sd-card',color:'#16a34a',prefix:'MEM',subcats:[]},
-    {key:'charger',label:'Chargers',icon:'ti-plug',color:'#db2777',prefix:'CHG',subcats:[]},
-    {key:'battery',label:'Batteries',icon:'ti-battery-2',color:'#c2410c',prefix:'BATT',subcats:[]},
-    {key:'microphone',label:'Microphones',icon:'ti-microphone',color:'#7c3aed',prefix:'MIC',subcats:[]},
-    {key:'case',label:'Cases',icon:'ti-briefcase',color:'#d97706',prefix:'CASE',subcats:[]},
-    {key:'tripod',label:'Tripods',icon:'ti-broadcast',color:'#ed3a3a',prefix:'TRI',subcats:[]},
-    {key:'drone',label:'Drones',icon:'ti-drone',color:'#0e7490',prefix:'DRONE',subcats:[]},
-    {key:'osmo',label:'Osmos',icon:'ti-video',color:'#52525b',prefix:'OSMO',subcats:[]}
+    {key:'camera',label:'Cameras',icon:'ti-camera',color:'#4f46e5',prefix:'CAM',qrEnabled:true,subcats:[{v:'DMC-G7',label:'G7'},{v:'EOS-R50',label:'R50'}]},
+    {key:'lens',label:'Lenses',icon:'ti-eye',color:'#0284c7',prefix:'LENS',qrEnabled:true,subcats:[{v:'55-210',label:'55-210'},{v:'45-150',label:'45-150'},{v:'14-42',label:'14-42'},{v:'14-30',label:'14-30'}]},
+    {key:'lenscap',label:'Lens caps',icon:'ti-circle-dot',color:'#a16207',prefix:'CAP',qrEnabled:false,subcats:[]},
+    {key:'memory',label:'Memory cards',icon:'ti-device-sd-card',color:'#16a34a',prefix:'MEM',qrEnabled:true,subcats:[]},
+    {key:'charger',label:'Chargers',icon:'ti-plug',color:'#db2777',prefix:'CHG',qrEnabled:true,subcats:[]},
+    {key:'battery',label:'Batteries',icon:'ti-battery-2',color:'#c2410c',prefix:'BATT',qrEnabled:false,subcats:[]},
+    {key:'microphone',label:'Microphones',icon:'ti-microphone',color:'#7c3aed',prefix:'MIC',qrEnabled:true,subcats:[]},
+    {key:'case',label:'Cases',icon:'ti-briefcase',color:'#d97706',prefix:'CASE',qrEnabled:true,subcats:[]},
+    {key:'tripod',label:'Tripods',icon:'ti-broadcast',color:'#ed3a3a',prefix:'TRI',qrEnabled:true,subcats:[]},
+    {key:'drone',label:'Drones',icon:'ti-drone',color:'#0e7490',prefix:'DRONE',qrEnabled:true,subcats:[]},
+    {key:'osmo',label:'Osmos',icon:'ti-video',color:'#52525b',prefix:'OSMO',qrEnabled:true,subcats:[]}
   ];
 }
+/* Kit types are a simple, user-editable grouping for kits (e.g. "Classroom
+   kits" vs "Event kits") — like categories, but for kits rather than
+   individual items, so a large kit list can be segmented and filtered.
+   This seed list is only the starting point for a brand-new install. */
+function defaultKitTypes(){
+  return [
+    {key:'classroom',label:'Classroom kits',icon:'ti-school',color:'#4f46e5'},
+    {key:'event',label:'Event / loan kits',icon:'ti-briefcase',color:'#d97706'}
+  ];
+}
+
 /* Preset colour swatches offered in the Categories tab. Users can also add
    any custom colour via the "+" swatch — those get appended to
    customColorChoices below and persist for reuse on future categories. */
@@ -1536,11 +1607,22 @@ var inventory = JSON.parse(localStorage.getItem('cam_inv') || 'null') || [];
 var log = JSON.parse(localStorage.getItem('cam_log') || '[]');
 var kits = JSON.parse(localStorage.getItem('cam_kits') || '[]');
 var categories = JSON.parse(localStorage.getItem('cam_categories') || 'null') || defaultCategories();
-/* Back-fill a prefix for categories saved before this feature existed, so
-   older installs still get sensible auto-prefixed IDs without a manual step. */
+var kitTypes = JSON.parse(localStorage.getItem('cam_kit_types') || 'null') || defaultKitTypes();
+/* Back-fill a prefix (and QR setting) for categories saved before those
+   features existed, so older installs still work sensibly without a
+   manual step: prefixes get derived from the key, and QR codes default
+   to "on" since that matches the app's previous (always-on) behaviour. */
 categories.forEach(function(c){
   if(!c.prefix)c.prefix=(c.key||'').replace(/[^a-z0-9]/gi,'').slice(0,4).toUpperCase()||'ITM';
+  if(c.qrEnabled===undefined)c.qrEnabled=true;
 });
+kitTypes.forEach(function(t){
+  if(!t.icon)t.icon='ti-stack-2';
+  if(!t.color)t.color='#7c3aed';
+});
+// Kits saved before kit types existed just have no type — treat that as
+// "No type" rather than crashing anywhere that reads kit.type.
+kits.forEach(function(k){ if(k.type===undefined)k.type=''; });
 var currentItem = null;
 var currentKit = null;
 var videoStream = null;
@@ -1551,7 +1633,7 @@ var editingKitId = null;
 var editingCategoryKey = null;
 
 function tsOffset(m){var d=new Date();d.setMinutes(d.getMinutes()+m);return d.toISOString();}
-function save(){localStorage.setItem('cam_inv',JSON.stringify(inventory));localStorage.setItem('cam_log',JSON.stringify(log));localStorage.setItem('cam_kits',JSON.stringify(kits));localStorage.setItem('cam_categories',JSON.stringify(categories));localStorage.setItem('cam_custom_colors',JSON.stringify(customColorChoices));}
+function save(){localStorage.setItem('cam_inv',JSON.stringify(inventory));localStorage.setItem('cam_log',JSON.stringify(log));localStorage.setItem('cam_kits',JSON.stringify(kits));localStorage.setItem('cam_categories',JSON.stringify(categories));localStorage.setItem('cam_kit_types',JSON.stringify(kitTypes));localStorage.setItem('cam_custom_colors',JSON.stringify(customColorChoices));}
 
 function fmtTime(iso){
   if(!iso)return'';
@@ -1572,6 +1654,13 @@ function catPrefix(cat){
   if(!cat)return '';
   if(cat.prefix)return cat.prefix;
   return (cat.key||'').replace(/[^a-z0-9]/gi,'').slice(0,4).toUpperCase()||'ITM';
+}
+/* Whether items in this category get their own printable QR code. Accepts
+   either a category key or a category object; defaults to true so
+   categories saved before this setting existed keep behaving as before. */
+function catQrEnabled(catOrKey){
+  var cat=typeof catOrKey==='string'?findCategory(catOrKey):catOrKey;
+  return !cat || cat.qrEnabled!==false;
 }
 function sanitizePrefix(v){
   return (v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10);
@@ -1600,6 +1689,28 @@ function hexToRgba(hex,alpha){
    automatically instead of falling back to plain grey. */
 function catCssVars(cat){
   var hex=catColor(cat);
+  return '--cat-bg:'+hexToRgba(hex,0.13)+';--cat-color:'+hex+';--cat-border:'+hexToRgba(hex,0.4)+';';
+}
+
+/* ── KIT TYPES ── (grouping/segmenting for kits, parallel to categories for items) */
+function findKitType(key){
+  return kitTypes.find(function(t){return t.key===key;});
+}
+function kitTypeLabel(key){
+  if(!key)return '';
+  var t=findKitType(key);
+  return t?t.label:key;
+}
+function kitTypeIcon(key){
+  var t=findKitType(key);
+  return t?t.icon:'ti-stack-2';
+}
+function kitTypeColor(key){
+  var t=findKitType(key);
+  return t?t.color:'#7c3aed';
+}
+function kitTypeCssVars(key){
+  var hex=kitTypeColor(key);
   return '--cat-bg:'+hexToRgba(hex,0.13)+';--cat-color:'+hex+';--cat-border:'+hexToRgba(hex,0.4)+';';
 }
 
@@ -1787,6 +1898,9 @@ function renderInventory(){
     var kitPills = memberKits.length
       ? '<div class="item-kit-tags">'+memberKits.map(function(k){return '<span class="kit-tag"><i class="ti ti-stack-2"></i>'+k.name+'</span>';}).join('')+'</div>'
       : '';
+    var qrBtn = catQrEnabled(item.category)
+      ? '<button class="btn btn-icon btn-sm" onclick="printItemQR(\''+item.id+'\')" title="Print QR label"><i class="ti ti-qrcode"></i></button>'
+      : '';
     return '<div class="item-card">'+
       '<div class="item-cat-icon" style="'+catCssVars(item.category)+'"><i class="ti '+catIcon(item.category)+'"></i></div>'+
       '<div class="item-info">'+
@@ -1798,6 +1912,7 @@ function renderInventory(){
       sp+
       '<div class="item-actions">'+
         actBtn+
+        qrBtn+
         '<button class="btn btn-icon btn-sm" onclick="deleteItem(\''+item.id+'\')" title="Remove from inventory" style="color:var(--red)"><i class="ti ti-trash"></i></button>'+
       '</div>'+
     '</div>';
@@ -1815,6 +1930,7 @@ function renderLog(){
   var recent = log.slice().sort(function(a,b){return new Date(b.time)-new Date(a.time);}).slice(0,10);
   var filtered = recent.filter(function(e){
     if(type==='category'){ if(e.action.indexOf('category_')!==0) return false; }
+    else if(type==='kittype'){ if(e.action.indexOf('kittype_')!==0) return false; }
     else if(type && e.action!==type) return false;
     if(cat && e.category!==cat) return false;
     if(search && !(
@@ -1832,11 +1948,14 @@ function renderLog(){
   }
   el.innerHTML = filtered.map(function(e){
     var isCatAction = e.action.indexOf('category_')===0;
+    var isKitTypeAction = e.action.indexOf('kittype_')===0;
+    var isGroupAction = isCatAction||isKitTypeAction;
     var dotCls = e.action==='out'?'ld-out'
       :e.action==='missing'?'ld-miss'
       :e.action==='removed'?'ld-miss'
       :e.action==='category_deleted'?'ld-miss'
-      :isCatAction?'ld-cat'
+      :e.action==='kittype_deleted'?'ld-miss'
+      :isGroupAction?'ld-cat'
       :'ld-in';
     var icon = e.action==='out'?'ti-arrow-right'
       :e.action==='missing'?'ti-alert-triangle'
@@ -1844,6 +1963,9 @@ function renderLog(){
       :e.action==='category_added'?'ti-folder-plus'
       :e.action==='category_updated'?'ti-pencil'
       :e.action==='category_deleted'?'ti-folder-x'
+      :e.action==='kittype_added'?'ti-tags'
+      :e.action==='kittype_updated'?'ti-pencil'
+      :e.action==='kittype_deleted'?'ti-tag-off'
       :'ti-arrow-back-up';
     var label = e.action==='out'?'Checked out to '
       :e.action==='missing'?'Reported missing by '
@@ -1851,8 +1973,11 @@ function renderLog(){
       :e.action==='category_added'?'Category created'
       :e.action==='category_updated'?'Category updated'
       :e.action==='category_deleted'?'Category deleted'
+      :e.action==='kittype_added'?'Kit type created'
+      :e.action==='kittype_updated'?'Kit type updated'
+      :e.action==='kittype_deleted'?'Kit type deleted'
       :'Returned by ';
-    var detail = isCatAction
+    var detail = isGroupAction
       ? label+(e.who?' — '+e.who:'')+' · '+e.itemId
       : label+(e.who||'—')+(e.class?' · '+e.class:'')+' · '+e.itemId;
     return '<div class="log-entry">'+
@@ -2110,6 +2235,11 @@ function addItem(){
   numInput.value='';
   numInput.dataset.touched='';
   updateNewIdPreview();
+  if(catQrEnabled(c)){
+    generateItemQR(id,name);
+  } else {
+    document.getElementById('item-qr-preview').classList.remove('show');
+  }
 }
 
 /* Works out the next free item number for a category (e.g. if CAM-001 and
@@ -2256,13 +2386,37 @@ function kitStatusSummary(kit){
 /* Tracks which kit rows have their item list expanded, so toggling one
    doesn't reset the others on re-render. */
 var expandedKits={};
+var kitTypeFilter='all';
 
 function toggleKitMembers(id){
   expandedKits[id]=!expandedKits[id];
   renderKits();
 }
 
+/* Filter chips for kit type, mirroring the category filter chips in the
+   Inventory tab: "All types" + one chip per kit type + "No type" for kits
+   that haven't been assigned one. */
+function renderKitTypeFilterChips(){
+  var bar=document.getElementById('kit-type-filter-bar');
+  if(!bar)return;
+  if(!kitTypes.length){
+    bar.innerHTML='';
+    return;
+  }
+  var html='<button class="filter-chip'+(kitTypeFilter==='all'?' active':'')+'" onclick="setKitTypeFilter(\'all\')">All types</button>';
+  kitTypes.forEach(function(t){
+    html+='<button class="filter-chip'+(kitTypeFilter===t.key?' active':'')+'" onclick="setKitTypeFilter(\''+t.key+'\')"><i class="ti '+t.icon+'" style="font-size:13px;vertical-align:-2px;margin-right:3px"></i>'+t.label+'</button>';
+  });
+  html+='<button class="filter-chip'+(kitTypeFilter==='none'?' active':'')+'" onclick="setKitTypeFilter(\'none\')">No type</button>';
+  bar.innerHTML=html;
+}
+function setKitTypeFilter(t){
+  kitTypeFilter=t;
+  renderKits();
+}
+
 function renderKits(){
+  renderKitTypeFilterChips();
   var list=document.getElementById('kit-list');
   if(!kits.length){
     list.innerHTML='<tr><td colspan="4"><div class="empty"><i class="ti ti-stack-2"></i><p>No kits yet. Create one to bundle items you check out together.</p></div></td></tr>';
@@ -2275,6 +2429,8 @@ function renderKits(){
 
   var filtered=kits.filter(function(kit){
     var items=kitItems(kit);
+    if(kitTypeFilter==='none'&&kit.type){return false;}
+    if(kitTypeFilter!=='all'&&kitTypeFilter!=='none'&&kit.type!==kitTypeFilter){return false;}
     if(search){
       var matchName=kit.name.toLowerCase().indexOf(search)>-1;
       var matchItem=items.some(function(x){return x.name.toLowerCase().indexOf(search)>-1||x.id.toLowerCase().indexOf(search)>-1;});
@@ -2298,8 +2454,9 @@ function renderKits(){
     var items=kitItems(kit);
     var summary=kitStatusSummary(kit);
     var expanded=!!expandedKits[kit.id];
+    var typePill=kit.type?'<span class="subcat-pill" style="'+kitTypeCssVars(kit.type)+'background:var(--cat-bg);color:var(--cat-color);border-color:var(--cat-border)"><i class="ti '+kitTypeIcon(kit.type)+'" style="margin-right:3px"></i>'+kitTypeLabel(kit.type)+'</span>':'';
     var row='<tr class="kit-row" onclick="toggleKitMembers(\''+kit.id+'\')">'+
-      '<td><div class="kit-row-name"><div class="kit-row-icon"><i class="ti ti-stack-2"></i></div>'+kit.name+'</div></td>'+
+      '<td><div class="kit-row-name"><div class="kit-row-icon"><i class="ti ti-stack-2"></i></div>'+kit.name+typePill+'</div></td>'+
       '<td><span class="kit-row-items'+(expanded?' expanded':'')+'">'+items.length+' item'+(items.length===1?'':'s')+' <i class="ti ti-chevron-down"></i></span></td>'+
       '<td><span class="status-pill '+(summary.cls||'')+'">'+summary.label+'</span></td>'+
       '<td><div class="kit-row-actions" onclick="event.stopPropagation()">'+
@@ -2321,10 +2478,21 @@ function openKitForm(kit){
   editingKitId=kit?kit.id:null;
   document.getElementById('kit-form-title').textContent=kit?'Edit kit':'New kit';
   document.getElementById('kit-name').value=kit?kit.name:'';
+  populateKitTypeSelect();
+  document.getElementById('kit-type-select').value=kit?(kit.type||''):'';
   renderKitCheckList(kit?kit.itemIds:[]);
   document.getElementById('kit-form-wrap').style.display='block';
   document.getElementById('kit-qr-preview').classList.remove('show');
   document.getElementById('kit-form-wrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* Fills the "Kit type" select in the kit form from the current kitTypes list. */
+function populateKitTypeSelect(){
+  var sel=document.getElementById('kit-type-select');
+  if(!sel)return;
+  var current=sel.value;
+  sel.innerHTML='<option value="">No type</option>'+kitTypes.map(function(t){return '<option value="'+t.key+'">'+t.label+'</option>';}).join('');
+  if(kitTypes.find(function(t){return t.key===current;}))sel.value=current;
 }
 
 function closeKitForm(){
@@ -2360,19 +2528,21 @@ function renderKitCheckList(selectedIds){
 function saveKit(){
   var name=document.getElementById('kit-name').value.trim();
   if(!name){showToast('Enter a kit name','ti-alert-triangle',true);return;}
+  var type=document.getElementById('kit-type-select').value;
   var checked=Array.prototype.slice.call(document.querySelectorAll('#kit-check-list input:checked:not(:disabled)')).map(function(c){return c.value;});
   if(!checked.length){showToast('Select at least one item for the kit','ti-alert-triangle',true);return;}
 
   if(editingKitId){
     var kit=kits.find(function(k){return k.id===editingKitId;});
     kit.name=name;
+    kit.type=type;
     kit.itemIds=checked;
     syncKitToSheets(kit);
     showToast('Kit "'+name+'" updated','ti-check',false);
     save();
     closeKitForm();
   } else {
-    var newKit={id:genKitId(name),name:name,itemIds:checked};
+    var newKit={id:genKitId(name),name:name,type:type,itemIds:checked};
     kits.push(newKit);
     syncKitToSheets(newKit);
     showToast('Kit "'+name+'" created','ti-check',false);
@@ -2401,11 +2571,162 @@ function deleteKit(id){
   showToast('Kit deleted','ti-check',false);
 }
 
+/* ── KIT TYPE MANAGEMENT ── */
+/* Lets people add / edit / remove kit types from the Kits tab, the same
+   way categories are managed from the Categories tab — segmenting kits
+   (Classroom kits, Event kits, etc.) rather than individual items. */
+var editingKitTypeKey=null;
+var editingKitTypeIcon='';
+var editingKitTypeColor='';
+
+function toggleKitTypeManager(){
+  var wrap=document.getElementById('kit-type-manager-wrap');
+  var show=wrap.style.display==='none';
+  wrap.style.display=show?'block':'none';
+  if(show){
+    renderKitTypeList();
+    closeKitTypeForm();
+    wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+}
+
+function renderKitTypeList(){
+  var wrap=document.getElementById('kit-type-list');
+  if(!wrap)return;
+  if(!kitTypes.length){
+    wrap.innerHTML='<div class="empty" style="padding:20px 0"><p>No kit types yet. Add one to start segmenting your kits.</p></div>';
+    return;
+  }
+  wrap.innerHTML=kitTypes.map(function(t){
+    var count=kits.filter(function(k){return k.type===t.key;}).length;
+    return '<div class="kit-check-row" style="cursor:default">'+
+      '<span style="width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;'+kitTypeCssVars(t.key)+'background:var(--cat-bg)"><i class="ti '+t.icon+'" style="font-size:14px;color:var(--cat-color)"></i></span>'+
+      '<span class="kc-name">'+t.label+' <span class="kc-id">'+count+' kit'+(count===1?'':'s')+'</span></span>'+
+      '<button type="button" class="btn btn-icon btn-sm" onclick="editKitType(\''+t.key+'\')" title="Edit type"><i class="ti ti-pencil"></i></button>'+
+      '<button type="button" class="btn btn-icon btn-sm" onclick="deleteKitType(\''+t.key+'\')" title="Delete type" style="color:var(--red)"><i class="ti ti-trash"></i></button>'+
+    '</div>';
+  }).join('');
+}
+
+function updateKitTypeKeyPreview(){
+  var preview=document.getElementById('kit-type-key-preview');
+  var label=document.getElementById('kit-type-label').value;
+  if(!preview)return;
+  preview.textContent=editingKitTypeKey?editingKitTypeKey:(slugify(label)||'—');
+}
+
+/* Simple native <select> of icon names (rather than the full searchable
+   grid used for item categories) — kept lightweight since kit types are a
+   secondary, optional grouping. */
+function populateKtIconSelect(){
+  var sel=document.getElementById('kt-icon-select');
+  if(!sel)return;
+  sel.innerHTML=iconChoices.map(function(ic){return '<option value="'+ic+'">'+ic.replace('ti-','')+'</option>';}).join('');
+  sel.value=editingKitTypeIcon||iconChoices[0];
+}
+function renderKitTypeFormPreview(){
+  editingKitTypeIcon=document.getElementById('kt-icon-select').value;
+}
+
+function renderKtColorPicker(){
+  var wrap=document.getElementById('kt-color-picker');
+  if(!wrap)return;
+  var allColors=colorChoices.concat(customColorChoices);
+  wrap.innerHTML=allColors.map(function(c){
+    return '<button type="button" class="color-swatch'+(c===editingKitTypeColor?' selected':'')+'" style="background:'+c+'" onclick="selectKtColor(\''+c+'\')" title="'+c+'"></button>';
+  }).join('');
+}
+function selectKtColor(c){
+  editingKitTypeColor=c;
+  renderKtColorPicker();
+}
+
+function openKitTypeForm(type){
+  editingKitTypeKey=type?type.key:null;
+  document.getElementById('kit-type-form-title').textContent=type?'Edit kit type':'New kit type';
+  document.getElementById('kit-type-label').value=type?type.label:'';
+  editingKitTypeIcon=type?type.icon:iconChoices[0];
+  editingKitTypeColor=type?type.color:colorChoices[kitTypes.length%colorChoices.length];
+  populateKtIconSelect();
+  renderKtColorPicker();
+  updateKitTypeKeyPreview();
+  document.getElementById('kit-type-form-wrap').style.display='block';
+}
+function closeKitTypeForm(){
+  editingKitTypeKey=null;
+  var form=document.getElementById('kit-type-form-wrap');
+  if(form)form.style.display='none';
+}
+
+function saveKitType(){
+  var label=document.getElementById('kit-type-label').value.trim();
+  if(!label){showToast('Enter a kit type name','ti-alert-triangle',true);return;}
+  var savedType,isNew=!editingKitTypeKey;
+  if(editingKitTypeKey){
+    var t=findKitType(editingKitTypeKey);
+    if(!t)return;
+    t.label=label;
+    t.icon=editingKitTypeIcon;
+    t.color=editingKitTypeColor;
+    savedType=t;
+    showToast('Kit type "'+label+'" updated','ti-check',false);
+  } else {
+    var key=slugify(label);
+    if(!key){showToast('Enter a valid kit type name','ti-alert-triangle',true);return;}
+    if(findKitType(key)){showToast('A kit type with that name already exists','ti-x',true);return;}
+    savedType={key:key,label:label,icon:editingKitTypeIcon,color:editingKitTypeColor};
+    kitTypes.push(savedType);
+    showToast('Kit type "'+label+'" created','ti-check',false);
+  }
+  save();
+  closeKitTypeForm();
+  renderKitTypeList();
+  renderKitTypeFilterChips();
+  populateKitTypeSelect();
+  syncKitTypeToSheets(savedType);
+  logKitTypeChange(isNew?'kittype_added':'kittype_updated',savedType);
+}
+
+function editKitType(key){
+  var t=findKitType(key);
+  if(t)openKitTypeForm(t);
+}
+
+function deleteKitType(key){
+  var t=findKitType(key);
+  if(!t)return;
+  var inUse=kits.filter(function(k){return k.type===key;}).length;
+  if(inUse){
+    showToast('Can\'t delete — '+inUse+' kit'+(inUse===1?'':'s')+' still '+(inUse===1?'uses':'use')+' "'+t.label+'". Reassign or remove them first.','ti-alert-triangle',true);
+    return;
+  }
+  if(!confirm('Delete kit type "'+t.label+'"? This cannot be undone.'))return;
+  logKitTypeChange('kittype_deleted',t);
+  kitTypes=kitTypes.filter(function(x){return x.key!==key;});
+  save();
+  renderKitTypeList();
+  renderKitTypeFilterChips();
+  populateKitTypeSelect();
+  showToast('Kit type deleted','ti-check',false);
+  deleteKitTypeFromSheets(key);
+}
+
+/* Records a kit type add/edit/delete in the Activity Log, same pattern as
+   logCategoryChange. */
+function logKitTypeChange(action,type){
+  var entry={action:action,itemId:type.key,itemName:type.label,category:'',who:'',class:'',time:new Date().toISOString()};
+  log.push(entry);
+  save();
+  if(typeof renderLog==='function')renderLog();
+  pushToSheets(entry);
+}
+
 /* ── CATEGORIES ── */
 /* Lets people add / edit / remove top-level categories and their
    sub-categories from the UI instead of editing this file's source. */
 var editingCategoryIcon='';
 var editingCategoryColor='';
+var editingCategoryQrEnabled=true;
 var editingSubcats=[];
 
 function slugify(s){
@@ -2430,7 +2751,7 @@ function renderCategories(){
         '<div class="kit-icon-wrap" style="'+catCssVars(cat.key)+'background:var(--cat-bg)"><i class="ti '+cat.icon+'" style="color:var(--cat-color)"></i></div>'+
         '<div style="flex:1;min-width:0">'+
           '<div class="kit-name">'+cat.label+'</div>'+
-          '<div class="kit-meta">'+count+' item'+(count===1?'':'s')+' · <code style="font-size:10.5px;color:var(--muted)">'+cat.key+'</code> · IDs: <code style="font-size:10.5px;color:var(--muted)">'+catPrefix(cat)+'-XXX</code></div>'+
+          '<div class="kit-meta">'+count+' item'+(count===1?'':'s')+' · <code style="font-size:10.5px;color:var(--muted)">'+cat.key+'</code> · IDs: <code style="font-size:10.5px;color:var(--muted)">'+catPrefix(cat)+'-XXX</code> · QR codes: '+(catQrEnabled(cat)?'<span style="color:var(--green)">on</span>':'<span style="color:var(--muted)">off</span>')+'</div>'+
         '</div>'+
         '<button class="btn btn-icon btn-sm" onclick="editCategory(\''+cat.key+'\')" title="Edit category"><i class="ti ti-pencil"></i></button>'+
         '<button class="btn btn-icon btn-sm" onclick="deleteCategory(\''+cat.key+'\')" title="Delete category" style="color:var(--red)"><i class="ti ti-trash"></i></button>'+
@@ -2587,6 +2908,8 @@ function openCategoryForm(cat){
   prefixInput.dataset.touched=cat?'1':'';
   editingCategoryIcon=cat?cat.icon:iconChoices[0];
   editingCategoryColor=cat?cat.color:colorChoices[categories.length%colorChoices.length];
+  editingCategoryQrEnabled=cat?catQrEnabled(cat):true;
+  document.getElementById('cat-qr-enabled').checked=editingCategoryQrEnabled;
   editingSubcats=(cat&&cat.subcats)?cat.subcats.slice():[];
   updateCatKeyPreview();
   updateIconSelectTrigger();
@@ -2616,11 +2939,12 @@ function saveCategory(){
   if(editingCategoryKey){
     var cat=findCategory(editingCategoryKey);
     if(!cat)return;
-    var oldLabel=cat.label,oldPrefix=catPrefix(cat),oldIcon=cat.icon,oldColor=cat.color,oldSubN=(cat.subcats||[]).length;
+    var oldLabel=cat.label,oldPrefix=catPrefix(cat),oldIcon=cat.icon,oldColor=cat.color,oldSubN=(cat.subcats||[]).length,oldQr=catQrEnabled(cat);
     cat.label=label;
     cat.icon=editingCategoryIcon;
     cat.color=editingCategoryColor;
     cat.prefix=prefix;
+    cat.qrEnabled=editingCategoryQrEnabled;
     cat.subcats=editingSubcats.slice();
     savedCat=cat;
     // Build a short human-readable summary of what actually changed, so the
@@ -2631,13 +2955,14 @@ function saveCategory(){
     if(oldIcon!==editingCategoryIcon)changes.push('icon changed');
     if(oldColor!==editingCategoryColor)changes.push('colour changed');
     if(oldSubN!==editingSubcats.length)changes.push('sub-categories changed');
+    if(oldQr!==editingCategoryQrEnabled)changes.push('QR codes '+(editingCategoryQrEnabled?'enabled':'disabled'));
     changeSummary=changes.join(', ');
     showToast('Category "'+label+'" updated','ti-check',false);
   } else {
     var key=slugify(label);
     if(!key){showToast('Enter a valid category name','ti-alert-triangle',true);return;}
     if(findCategory(key)){showToast('A category with that name already exists','ti-x',true);return;}
-    savedCat={key:key,label:label,icon:editingCategoryIcon,color:editingCategoryColor,prefix:prefix,subcats:editingSubcats.slice()};
+    savedCat={key:key,label:label,icon:editingCategoryIcon,color:editingCategoryColor,prefix:prefix,qrEnabled:editingCategoryQrEnabled,subcats:editingSubcats.slice()};
     categories.push(savedCat);
     showToast('Category "'+label+'" created','ti-check',false);
   }
@@ -2897,6 +3222,91 @@ function downloadKitQR(){
   a.click();
 }
 
+/* ── ITEM QR (only offered for categories with QR codes enabled) ── */
+function generateItemQR(id,name){
+  var preview=document.getElementById('item-qr-preview');
+  var canvasWrap=document.getElementById('item-qr-canvas');
+  canvasWrap.innerHTML='';
+  preview.classList.add('show');
+  document.getElementById('item-qr-label-text').textContent=id+' — '+name;
+  if(typeof QRCode!=='undefined'){
+    try{
+      new QRCode(canvasWrap,{
+        text:id,
+        width:180,
+        height:180,
+        colorDark:'#0f172a',
+        colorLight:'#ffffff',
+        correctLevel:QRCode.CorrectLevel.M
+      });
+    }catch(e){
+      canvasWrap.textContent='QR: '+id;
+    }
+  } else {
+    canvasWrap.textContent='QR: '+id;
+  }
+  preview.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function downloadItemQR(){
+  var c=document.querySelector('#item-qr-canvas canvas');
+  if(!c){showToast('Generate an item QR code first','ti-alert-triangle',true);return;}
+  var a=document.createElement('a');
+  var lbl=document.getElementById('item-qr-label-text').textContent.replace(/[^a-z0-9]/gi,'-').toLowerCase();
+  a.href=c.toDataURL('image/png');
+  a.download=lbl+'-qr.png';
+  a.click();
+}
+
+/* Re-print an already-existing item's QR label from the Inventory tab —
+   only available when its category has QR codes turned on. */
+function printItemQR(itemId){
+  var item=inventory.find(function(x){return x.id===itemId;});
+  if(!item)return;
+  if(!catQrEnabled(item.category)){
+    showToast('QR codes are turned off for this item\'s category','ti-alert-triangle',true);
+    return;
+  }
+
+  var temp=document.createElement('div');
+  temp.style.position='fixed';
+  temp.style.left='-9999px';
+  document.body.appendChild(temp);
+
+  try{
+    new QRCode(temp,{text:item.id,width:240,height:240,colorDark:'#0f172a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+  }catch(e){
+    document.body.removeChild(temp);
+    showToast('Could not generate QR for printing','ti-alert-triangle',true);
+    return;
+  }
+
+  setTimeout(function(){
+    var canvas=temp.querySelector('canvas');
+    var dataUrl=canvas?canvas.toDataURL('image/png'):'';
+    document.body.removeChild(temp);
+    if(!dataUrl){showToast('Could not generate QR for printing','ti-alert-triangle',true);return;}
+
+    var win=window.open('','_blank','width=420,height=520');
+    if(!win){showToast('Allow pop-ups to print QR labels','ti-alert-triangle',true);return;}
+    win.document.write(
+      '<!DOCTYPE html><html><head><title>'+item.name+' QR label</title>'+
+      '<style>'+
+        'body{font-family:Arial,Helvetica,sans-serif;text-align:center;padding:24px;}'+
+        'img{width:220px;height:220px;}'+
+        '.lbl{margin-top:10px;font-size:16px;font-weight:700;}'+
+        '.sub{font-size:11px;color:#666;margin-top:2px;}'+
+      '</style></head><body>'+
+      '<img src="'+dataUrl+'" />'+
+      '<div class="lbl">'+item.name+'</div>'+
+      '<div class="sub">Item ID: '+item.id+'</div>'+
+      '<scr'+'ipt>window.onload=function(){setTimeout(function(){window.print();},150);};</scr'+'ipt>'+
+      '</body></html>'
+    );
+    win.document.close();
+  },150);
+}
+
 function printKitQR(id){
   var kit=kits.find(function(k){return k.id===id;});
   if(!kit)return;
@@ -3016,6 +3426,13 @@ async function bootstrapSheets(){
         body:JSON.stringify({action:'bootstrap_categories',categories:categories})
       });
     }
+    if(kitTypes.length){
+      await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'bootstrap_kit_types',kitTypes:kitTypes})
+      });
+    }
   }catch(err){ /* silent — next sync attempt will retry naturally */ }
 }
 
@@ -3092,6 +3509,36 @@ async function deleteCategoryFromSheets(categoryKey){
   }catch(err){ /* silent */ }
 }
 
+/* Upserts one kit type's current state (label/icon/colour) into the Kit
+   Types sheet row, mirroring syncCategoryToSheets. */
+async function syncKitTypeToSheets(kitType){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'sync_kit_type',kitType:kitType})
+    });
+    setSyncStatus('ok','Synced to Sheets');
+  }catch(err){
+    setSyncStatus('err','Sync failed');
+  }
+}
+
+/* Removes a kit type's row from the Kit Types sheet. */
+async function deleteKitTypeFromSheets(kitTypeKey){
+  var url=sheetUrl();
+  if(!url)return;
+  try{
+    await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'delete_kit_type',kitTypeKey:kitTypeKey})
+    });
+  }catch(err){ /* silent */ }
+}
+
 /* Pulls the Inventory sheet down and merges it into local state.
    Sheet data wins on overlapping fields, so multiple devices stay
    in sync with whatever was checked in/out elsewhere. */
@@ -3106,6 +3553,7 @@ async function loadFromSheets(){
     var remote=data.items||[];
     var remoteKits=data.kits||[];
     var remoteCategories=data.categories||[];
+    var remoteKitTypes=data.kitTypes||[];
     var remoteLog=data.log||[];
     var seeded=false;
     if(remote.length){
@@ -3117,6 +3565,7 @@ async function loadFromSheets(){
     }
     if(remoteKits.length){
       kits=remoteKits;
+      kits.forEach(function(k){ if(k.type===undefined)k.type=''; });
       save();
       if(document.getElementById('panel-kits').classList.contains('active'))renderKits();
       populateKitSelect();
@@ -3127,10 +3576,23 @@ async function loadFromSheets(){
       categories=remoteCategories;
       categories.forEach(function(c){
         if(!c.prefix)c.prefix=(c.key||'').replace(/[^a-z0-9]/gi,'').slice(0,4).toUpperCase()||'ITM';
+        if(c.qrEnabled===undefined)c.qrEnabled=true;
       });
       save();
       refreshCategoryDependentUI();
     } else if(categories.length){
+      seeded=true;
+    }
+    if(remoteKitTypes.length){
+      kitTypes=remoteKitTypes;
+      kitTypes.forEach(function(t){
+        if(!t.icon)t.icon='ti-stack-2';
+        if(!t.color)t.color='#7c3aed';
+      });
+      save();
+      if(document.getElementById('panel-kits').classList.contains('active')){renderKits();renderKitTypeList();}
+      populateKitTypeSelect();
+    } else if(kitTypes.length){
       seeded=true;
     }
     // The Activity Log sheet is the shared source of truth across every
