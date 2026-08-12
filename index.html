@@ -331,6 +331,29 @@
   .s-out { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
   .s-missing { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
 
+  /* ── BOOKINGS (due-back date pill + extend/calendar mini-buttons) ── */
+  .booking-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+  .booking-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 20px;
+  }
+  .booking-pill i { font-size: 12px; }
+  .due-ok   { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .due-soon { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .due-over { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .booking-mini-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: var(--white); color: var(--mid);
+    cursor: pointer; text-decoration: none;
+    transition: all 0.12s;
+  }
+  .booking-mini-btn i { font-size: 12px; }
+  .booking-mini-btn:hover { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+
   .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
   /* ── KITS ── */
@@ -1207,6 +1230,11 @@
                     <input type="text" class="input-field" id="who-last-input" placeholder="Last name" required />
                   </div>
                 </div>
+                <div class="form-row" id="who-due-row">
+                  <label>Due back (optional)</label>
+                  <input type="datetime-local" class="input-field" id="who-due-input" />
+                </div>
+                <div id="result-booking-status"></div>
                 <div class="result-actions" id="result-actions"></div>
                 <div id="result-kit-shortcuts"></div>
               </div>
@@ -1222,6 +1250,7 @@
               </div>
               <div class="result-body">
                 <div class="kit-members" id="kit-result-members"></div>
+                <div id="kit-result-booking-status"></div>
 
                 <div id="kit-checkout-section">
                 <div class="form-row-2" style="margin-top:14px">
@@ -1233,6 +1262,10 @@
                     <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px">Last name <span style="color:var(--red)">*</span></label>
                     <input type="text" class="input-field" id="kit-who-last-input" placeholder="Last name" required />
                   </div>
+                </div>
+                <div class="form-row" id="kit-who-due-row">
+                  <label>Due back (optional)</label>
+                  <input type="datetime-local" class="input-field" id="kit-who-due-input" />
                 </div>
                 <button class="btn btn-out btn-full" style="margin-top:10px" id="kit-checkout-btn" onclick="doKitCheckout()"><i class="ti ti-arrow-right"></i> Check out kit</button>
                 </div>
@@ -1535,7 +1568,7 @@
    It looks like: https://script.google.com/macros/s/AKfycb..xyz../exec
    See Code.gs + the setup guide for how to get this.
    ========================================================================= */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzABShNLHv9jtQVAbAp-OTSkpoynam9hMH5YdGVsCIlnvUA7qhIQou8AEBxv2n5fGjk/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbwQT3i9h1YNYue2e1v--MR-IjIP6uDmgamQSoT315ijBCGNtLy0Q01KTA-WWKhcSkXy/exec";
 
 /* ── DATA ── */
 /* Categories are now user-editable (see the Categories tab) instead of
@@ -1604,6 +1637,7 @@ var iconChoices = [
 ];
 
 var inventory = JSON.parse(localStorage.getItem('cam_inv') || 'null') || [];
+var bookings = JSON.parse(localStorage.getItem('cam_bookings') || '[]');
 var log = JSON.parse(localStorage.getItem('cam_log') || '[]');
 var kits = JSON.parse(localStorage.getItem('cam_kits') || '[]');
 var categories = JSON.parse(localStorage.getItem('cam_categories') || 'null') || defaultCategories();
@@ -1633,7 +1667,7 @@ var editingKitId = null;
 var editingCategoryKey = null;
 
 function tsOffset(m){var d=new Date();d.setMinutes(d.getMinutes()+m);return d.toISOString();}
-function save(){localStorage.setItem('cam_inv',JSON.stringify(inventory));localStorage.setItem('cam_log',JSON.stringify(log));localStorage.setItem('cam_kits',JSON.stringify(kits));localStorage.setItem('cam_categories',JSON.stringify(categories));localStorage.setItem('cam_kit_types',JSON.stringify(kitTypes));localStorage.setItem('cam_custom_colors',JSON.stringify(customColorChoices));}
+function save(){localStorage.setItem('cam_inv',JSON.stringify(inventory));localStorage.setItem('cam_log',JSON.stringify(log));localStorage.setItem('cam_kits',JSON.stringify(kits));localStorage.setItem('cam_categories',JSON.stringify(categories));localStorage.setItem('cam_kit_types',JSON.stringify(kitTypes));localStorage.setItem('cam_custom_colors',JSON.stringify(customColorChoices));localStorage.setItem('cam_bookings',JSON.stringify(bookings));}
 
 function fmtTime(iso){
   if(!iso)return'';
@@ -1726,6 +1760,120 @@ function minorLabel(cat,v){
   if(!arr)return v;
   var f=arr.find(function(o){return o.v===v;});
   return f?f.label:v;
+}
+
+/* ── BOOKINGS (due-back dates + Google Calendar) ── */
+function genBookingId(){ return 'BK-'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase(); }
+
+function findActiveBookingForItem(itemId){
+  return bookings.find(function(b){
+    return b.status==='active' && (
+      (b.type==='item' && b.refId===itemId) ||
+      (b.type==='kit' && b.itemIds && b.itemIds.indexOf(itemId)>-1)
+    );
+  });
+}
+function findActiveBookingForKit(kitId){
+  return bookings.find(function(b){ return b.status==='active' && b.type==='kit' && b.refId===kitId; });
+}
+
+function isOverdue(b){ return b && b.dueTime && new Date(b.dueTime) < new Date(); }
+
+function dueDeltaText(dueIso){
+  var diff = new Date() - new Date(dueIso); // ms; positive = overdue
+  var abs = Math.abs(diff);
+  var h = Math.floor(abs/3600000), d = Math.floor(h/24); h = h%24;
+  var span = d>0 ? (d+'d '+h+'h') : (h>0 ? h+'h' : Math.max(1,Math.floor(abs/60000))+'m');
+  return diff>0 ? ('Overdue by '+span) : ('Due in '+span);
+}
+
+/* Renders the small "due back" pill + extend/calendar controls used on
+   item cards, kit rows, and the scan result cards. */
+function bookingPillHtml(b, opts){
+  if(!b) return '';
+  opts = opts || {};
+  var overdue = isOverdue(b);
+  var soon = !overdue && (new Date(b.dueTime) - new Date()) < 24*3600000;
+  var cls = overdue ? 'due-over' : soon ? 'due-soon' : 'due-ok';
+  var icon = overdue ? 'ti-alert-triangle' : 'ti-clock';
+  var label = overdue ? dueDeltaText(b.dueTime) : ('Due '+new Date(b.dueTime).toLocaleString('en-NZ',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}));
+  var html = '<div class="booking-row">'+
+    '<span class="booking-pill '+cls+'"><i class="ti '+icon+'"></i>'+label+'</span>';
+  if(!opts.hideControls){
+    html += '<button type="button" class="booking-mini-btn" onclick="event.stopPropagation();openExtendPrompt(\''+b.id+'\')"><i class="ti ti-clock-plus"></i> Add time</button>';
+    if(b.eventLink){
+      html += '<a class="booking-mini-btn" href="'+b.eventLink+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="ti ti-calendar-event"></i> Calendar</a>';
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+/* Quick "add extra time" — a few one-tap presets plus a custom option,
+   avoiding a whole separate modal for something this small. */
+function openExtendPrompt(bookingId){
+  var b = bookings.find(function(x){return x.id===bookingId;});
+  if(!b) return;
+  var choice = prompt(
+    'Extend due date for "'+b.refName+'"\n\nType one of: 1d, 3d, 1w — or a custom date/time (e.g. 2026-08-20 17:00)',
+    '1d'
+  );
+  if(choice===null) return;
+  choice = choice.trim();
+  var presets = {'1d':24,'3d':72,'1w':168};
+  var newDue;
+  if(presets[choice.toLowerCase()]){
+    var base = new Date(b.dueTime) > new Date() ? new Date(b.dueTime) : new Date();
+    newDue = new Date(base.getTime() + presets[choice.toLowerCase()]*3600000);
+  } else {
+    var parsed = new Date(choice.replace(' ','T'));
+    if(isNaN(parsed.getTime())){ showToast('Could not understand that date','ti-alert-triangle',true); return; }
+    newDue = parsed;
+  }
+  extendBooking(b.id, newDue.toISOString());
+}
+
+function extendBooking(bookingId, newDueIso){
+  var b = bookings.find(function(x){return x.id===bookingId;});
+  if(!b) return;
+  b.dueTime = newDueIso;
+  save();
+  extendBookingOnSheets(b);
+  showToast('Due date extended to '+new Date(newDueIso).toLocaleString(),'ti-clock',false);
+  renderInventory();
+  if(document.getElementById('panel-kits').classList.contains('active')) renderKits();
+  if(currentItem) showResultCard(currentItem);
+  if(currentKit) showKitResultCard(currentKit);
+}
+
+async function createBookingOnSheets(booking){
+  var url=sheetUrl(); if(!url) return null;
+  try{
+    var res=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'create_booking',booking:booking})});
+    var data=await res.json();
+    if(data.ok){ booking.eventId=data.eventId; booking.eventLink=data.eventLink; save(); }
+    setSyncStatus('ok','Synced to Sheets');
+    return data;
+  }catch(err){ setSyncStatus('err','Sync failed'); return null; }
+}
+async function extendBookingOnSheets(booking){
+  var url=sheetUrl(); if(!url) return;
+  try{
+    var res=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'extend_booking',bookingId:booking.id,newDueTime:booking.dueTime})});
+    var data=await res.json();
+    if(data.ok && data.eventLink){ booking.eventLink=data.eventLink; save(); }
+    setSyncStatus('ok','Synced to Sheets');
+  }catch(err){ setSyncStatus('err','Sync failed'); }
+}
+async function completeBookingOnSheets(bookingId){
+  var url=sheetUrl(); if(!url) return;
+  try{
+    await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'complete_booking',bookingId:bookingId})});
+    setSyncStatus('ok','Synced to Sheets');
+  }catch(err){ setSyncStatus('err','Sync failed'); }
 }
 
 /* ── NAV ── */
@@ -1901,12 +2049,15 @@ function renderInventory(){
     var qrBtn = catQrEnabled(item.category)
       ? '<button class="btn btn-icon btn-sm" onclick="printItemQR(\''+item.id+'\')" title="Print QR label"><i class="ti ti-qrcode"></i></button>'
       : '';
+    var booking = findActiveBookingForItem(item.id);
+    var bookingHtml = item.status!=='in' ? bookingPillHtml(booking) : '';
     return '<div class="item-card">'+
       '<div class="item-cat-icon" style="'+catCssVars(item.category)+'"><i class="ti '+catIcon(item.category)+'"></i></div>'+
       '<div class="item-info">'+
         '<div class="item-name">'+item.name+subPill+'</div>'+
         '<div class="item-meta">'+item.id+'</div>'+
         who+
+        bookingHtml+
         kitPills+
       '</div>'+
       sp+
@@ -2136,8 +2287,14 @@ function showResultCard(item){
   sp.className='status-pill '+(item.status==='in'?'s-in':item.status==='missing'?'s-missing':'s-out');
   document.getElementById('who-first-input').value='';
   document.getElementById('who-last-input').value='';
+  document.getElementById('who-due-input').value='';
   var ra=document.getElementById('result-actions');
   var kitShortcuts=document.getElementById('result-kit-shortcuts');
+  var resultBookingWrap=document.getElementById('result-booking-status');
+  if(resultBookingWrap){
+    var activeItemBooking=item.status!=='in'?findActiveBookingForItem(item.id):null;
+    resultBookingWrap.innerHTML=bookingPillHtml(activeItemBooking);
+  }
   if(item.status==='in'){
     ra.innerHTML='<button class="btn btn-out" style="flex:1" onclick="doAction(\'out\')"><i class="ti ti-arrow-right"></i> Check out</button>';
     var memberKits=kitsContainingItem(item.id);
@@ -2175,9 +2332,21 @@ function doAction(action){
   else{item.status='missing';item.lastTime=now;}
   var entry={action:action,itemId:item.id,itemName:item.name,category:item.category,who:who||item.lastWho,class:'',time:now};
   log.push(entry);
+  var dueVal = document.getElementById('who-due-input').value;
+  if(action==='out'&&dueVal){
+    var booking = { id: genBookingId(), type:'item', refId:item.id, refName:item.name,
+      who: who, checkoutTime: now, dueTime: new Date(dueVal).toISOString(), status:'active', eventId:'', eventLink:'' };
+    bookings.push(booking);
+    createBookingOnSheets(booking); // fire-and-forget; fills in eventId/eventLink async
+  }
+  if(action==='in'){
+    var openB = findActiveBookingForItem(item.id);
+    if(openB && openB.type==='item'){ openB.status='returned'; openB.returnedTime=now; completeBookingOnSheets(openB.id); }
+  }
   save();
   pushToSheets(entry);
   syncItemToSheets(item);
+  document.getElementById('who-due-input').value='';
   document.getElementById('result-card').classList.remove('visible');
   document.getElementById('result-kit-shortcuts').innerHTML='';
   currentItem=null;
@@ -2455,10 +2624,12 @@ function renderKits(){
     var summary=kitStatusSummary(kit);
     var expanded=!!expandedKits[kit.id];
     var typePill=kit.type?'<span class="subcat-pill" style="'+kitTypeCssVars(kit.type)+'background:var(--cat-bg);color:var(--cat-color);border-color:var(--cat-border)"><i class="ti '+kitTypeIcon(kit.type)+'" style="margin-right:3px"></i>'+kitTypeLabel(kit.type)+'</span>':'';
+    var kitBooking=findActiveBookingForKit(kit.id);
+    var kitBookingHtml=kitBooking?bookingPillHtml(kitBooking,{hideControls:true}):'';
     var row='<tr class="kit-row" onclick="toggleKitMembers(\''+kit.id+'\')">'+
       '<td><div class="kit-row-name"><div class="kit-row-icon"><i class="ti ti-stack-2"></i></div>'+kit.name+typePill+'</div></td>'+
       '<td><span class="kit-row-items'+(expanded?' expanded':'')+'">'+items.length+' item'+(items.length===1?'':'s')+' <i class="ti ti-chevron-down"></i></span></td>'+
-      '<td><span class="status-pill '+(summary.cls||'')+'">'+summary.label+'</span></td>'+
+      '<td><span class="status-pill '+(summary.cls||'')+'">'+summary.label+'</span>'+kitBookingHtml+'</td>'+
       '<td><div class="kit-row-actions" onclick="event.stopPropagation()">'+
         '<button class="btn btn-icon btn-sm" onclick="printKitQR(\''+kit.id+'\')" title="Print kit QR label"><i class="ti ti-qrcode"></i></button>'+
         '<button class="btn btn-icon btn-sm" onclick="editKit(\''+kit.id+'\')" title="Edit kit"><i class="ti ti-pencil"></i></button>'+
@@ -3047,7 +3218,7 @@ function checkOutKitFromItem(kitId){
 /* Checks out every available item in a kit together, logging each one
    individually (so the Activity log / Sheets stay item-level) while the
    person only ever has to scan the kit's single QR code. */
-function applyKitCheckout(kit,who,cls){
+function applyKitCheckout(kit,who,cls,dueIso){
   var items=kitItems(kit);
   var targets=items.filter(function(x){return x.status==='in';});
   if(!targets.length){
@@ -3063,6 +3234,15 @@ function applyKitCheckout(kit,who,cls){
     syncItemToSheets(item);
   });
   save();
+
+  if(dueIso){
+    var booking={ id:genBookingId(), type:'kit', refId:kit.id, refName:kit.name,
+      who:who, checkoutTime:now, dueTime:dueIso, status:'active', eventId:'', eventLink:'',
+      itemIds: targets.map(function(x){return x.id;}) };
+    bookings.push(booking); save();
+    createBookingOnSheets(booking);
+  }
+
   renderInventory();
   if(document.getElementById('panel-kits').classList.contains('active'))renderKits();
   showToast(kit.name+' checked out to '+who+' ('+targets.length+' item'+(targets.length===1?'':'s')+')','ti-arrow-right',false);
@@ -3088,6 +3268,13 @@ function applyKitReturn(kit,itemIds){
     count++;
   });
   save();
+
+  var stillOut = kitItems(kit).some(function(x){return x.status!=='in';});
+  if(!stillOut){
+    var kb = findActiveBookingForKit(kit.id);
+    if(kb){ kb.status='returned'; kb.returnedTime=new Date().toISOString(); save(); completeBookingOnSheets(kb.id); }
+  }
+
   renderInventory();
   if(document.getElementById('panel-kits').classList.contains('active'))renderKits();
   showToast(kit.name+' — '+count+' item'+(count===1?'':'s')+' checked in','ti-check',false);
@@ -3130,6 +3317,11 @@ function showKitResultCard(kit){
   }).join('')||'<span class="kit-meta">No items in this kit yet</span>';
   document.getElementById('kit-who-first-input').value='';
   document.getElementById('kit-who-last-input').value='';
+  document.getElementById('kit-who-due-input').value='';
+  var kitBookingWrap=document.getElementById('kit-result-booking-status');
+  if(kitBookingWrap){
+    kitBookingWrap.innerHTML=bookingPillHtml(findActiveBookingForKit(kit.id));
+  }
 
   var availItems=items.filter(function(x){return x.status==='in';});
   var outItems=items.filter(function(x){return x.status==='out'||x.status==='missing';});
@@ -3172,7 +3364,8 @@ function doKitCheckout(){
   var last=document.getElementById('kit-who-last-input').value.trim();
   if(!first||!last){showToast('Enter a first and last name before checking out','ti-alert-triangle',true);return;}
   var who=first+' '+last;
-  applyKitCheckout(currentKit,who,'');
+  var dueVal=document.getElementById('kit-who-due-input').value;
+  applyKitCheckout(currentKit,who,'', dueVal ? new Date(dueVal).toISOString() : null);
   document.getElementById('kit-result-card').classList.remove('visible');
   currentKit=null;
 }
@@ -3433,6 +3626,10 @@ async function bootstrapSheets(){
         body:JSON.stringify({action:'bootstrap_kit_types',kitTypes:kitTypes})
       });
     }
+    if(bookings.length){
+      await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body:JSON.stringify({action:'bootstrap_bookings',bookings:bookings})});
+    }
   }catch(err){ /* silent — next sync attempt will retry naturally */ }
 }
 
@@ -3554,6 +3751,7 @@ async function loadFromSheets(){
     var remoteKits=data.kits||[];
     var remoteCategories=data.categories||[];
     var remoteKitTypes=data.kitTypes||[];
+    var remoteBookings=data.bookings||[];
     var remoteLog=data.log||[];
     var seeded=false;
     if(remote.length){
@@ -3594,6 +3792,12 @@ async function loadFromSheets(){
       populateKitTypeSelect();
     } else if(kitTypes.length){
       seeded=true;
+    }
+    if(remoteBookings.length){
+      bookings=remoteBookings;
+      save();
+    } else if(bookings.length){
+      seeded=true; // existing bootstrap flow will push local ones up
     }
     // The Activity Log sheet is the shared source of truth across every
     // device — replace local history with the latest 10 from Sheets
