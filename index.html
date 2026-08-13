@@ -156,6 +156,7 @@
     border-radius: 20px;
   }
   .badge.green { background: var(--green-bg); color: var(--green); }
+  .badge.red { background: var(--red-bg); color: var(--red); }
 
   .sidebar-footer {
     padding: 14px;
@@ -1124,6 +1125,10 @@
         <button class="nav-item" onclick="switchTab('kits')" id="nav-kits">
           <i class="ti ti-stack-2"></i> Kits
         </button>
+        <button class="nav-item" onclick="switchTab('bookings')" id="nav-bookings">
+          <i class="ti ti-calendar-event"></i> Bookings
+          <span class="badge" id="nav-overdue-count" style="display:none">0</span>
+        </button>
         <button class="nav-item" onclick="switchTab('log')" id="nav-log">
           <i class="ti ti-history"></i> Activity log
         </button>
@@ -1396,6 +1401,21 @@
         </div>
       </div>
 
+      <!-- BOOKINGS PANEL -->
+      <div class="panel" id="panel-bookings">
+        <div class="stat-row" id="bookings-stats-row"></div>
+        <div class="filter-bar" id="bookings-filter-bar"></div>
+        <div class="card-wrap">
+          <div class="card-wrap-header">
+            <h2>Active bookings</h2>
+            <button class="btn btn-sm" onclick="loadFromSheets()"><i class="ti ti-refresh"></i> Refresh</button>
+          </div>
+          <div style="padding:6px 18px 4px">
+            <div class="item-grid" id="bookings-list" style="padding:12px 0"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- CATEGORIES PANEL -->
       <div class="panel" id="panel-categories">
         <div class="section-header">
@@ -1568,7 +1588,7 @@
    It looks like: https://script.google.com/macros/s/AKfycb..xyz../exec
    See Code.gs + the setup guide for how to get this.
    ========================================================================= */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzJs-xDLdjjuuNnlamo1rE9wjI0ISdXo8jx4RBSUc0ewhtoch1k0Q185xK2HapjUm44/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzABShNLHv9jtQVAbAp-OTSkpoynam9hMH5YdGVsCIlnvUA7qhIQou8AEBxv2n5fGjk/exec";
 
 /* ── DATA ── */
 /* Categories are now user-editable (see the Categories tab) instead of
@@ -1852,10 +1872,26 @@ async function createBookingOnSheets(booking){
     var res=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'create_booking',booking:booking})});
     var data=await res.json();
-    if(data.ok){ booking.eventId=data.eventId; booking.eventLink=data.eventLink; save(); }
-    setSyncStatus('ok','Synced to Sheets');
+    if(data.ok){
+      booking.eventId=data.eventId; booking.eventLink=data.eventLink; save();
+      if(data.calendarError){
+        // The booking itself saved fine — only the Calendar side of it
+        // had trouble (bad calendar ID, no edit access, etc). Warn
+        // rather than pretend everything's fine, but don't treat this
+        // as a hard failure since the due date IS tracked.
+        setSyncStatus('err','Booking saved — Calendar sync failed');
+        showToast('Due date saved, but Calendar sync failed: '+data.calendarError,'ti-alert-triangle',true);
+      } else {
+        setSyncStatus('ok','Synced to Sheets');
+      }
+      renderBookingsTab();
+    } else {
+      // The whole request failed server-side — no booking row was written.
+      setSyncStatus('err','Booking failed');
+      showToast('Could not save the booking: '+(data.error||'unknown error'),'ti-alert-triangle',true);
+    }
     return data;
-  }catch(err){ setSyncStatus('err','Sync failed'); return null; }
+  }catch(err){ setSyncStatus('err','Sync failed'); showToast('Could not reach Sheets to save the booking','ti-alert-triangle',true); return null; }
 }
 async function extendBookingOnSheets(booking){
   var url=sheetUrl(); if(!url) return;
@@ -1863,17 +1899,170 @@ async function extendBookingOnSheets(booking){
     var res=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'extend_booking',bookingId:booking.id,newDueTime:booking.dueTime})});
     var data=await res.json();
-    if(data.ok && data.eventLink){ booking.eventLink=data.eventLink; save(); }
-    setSyncStatus('ok','Synced to Sheets');
-  }catch(err){ setSyncStatus('err','Sync failed'); }
+    if(data.ok){
+      if(data.eventLink){ booking.eventLink=data.eventLink; save(); }
+      if(data.calendarError){
+        setSyncStatus('err','Due date saved — Calendar sync failed');
+        showToast('Due date extended, but Calendar sync failed: '+data.calendarError,'ti-alert-triangle',true);
+      } else {
+        setSyncStatus('ok','Synced to Sheets');
+      }
+      renderBookingsTab();
+    } else {
+      setSyncStatus('err','Extend failed');
+      showToast('Could not extend the booking: '+(data.error||'unknown error'),'ti-alert-triangle',true);
+    }
+  }catch(err){ setSyncStatus('err','Sync failed'); showToast('Could not reach Sheets to extend the booking','ti-alert-triangle',true); }
 }
 async function completeBookingOnSheets(bookingId){
   var url=sheetUrl(); if(!url) return;
   try{
-    await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    var res=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'complete_booking',bookingId:bookingId})});
+    var data=await res.json();
+    if(data.ok){
+      if(data.calendarError){
+        setSyncStatus('err','Returned — Calendar cleanup failed');
+        showToast('Item checked in, but removing the Calendar event failed: '+data.calendarError,'ti-alert-triangle',true);
+      } else {
+        setSyncStatus('ok','Synced to Sheets');
+      }
+    } else {
+      setSyncStatus('err','Sync failed');
+      showToast('Could not mark the booking returned: '+(data.error||'unknown error'),'ti-alert-triangle',true);
+    }
+    renderBookingsTab();
+  }catch(err){ setSyncStatus('err','Sync failed'); }
+}
+async function deleteBookingOnSheets(bookingId){
+  var url=sheetUrl(); if(!url) return;
+  try{
+    await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'delete_booking',bookingId:bookingId})});
     setSyncStatus('ok','Synced to Sheets');
   }catch(err){ setSyncStatus('err','Sync failed'); }
+}
+
+/* Removes a booking outright — row + Calendar event — without touching
+   the underlying item/kit's checked-out status. Used from the Bookings
+   tab to clean up a booking that was created in error or is no longer
+   wanted, separately from actually checking the item back in. */
+function cancelBooking(bookingId){
+  var b=bookings.find(function(x){return x.id===bookingId;});
+  if(!b)return;
+  if(!confirm('Cancel the booking for "'+b.refName+'"? This removes the due date and its Calendar event, but does NOT check the item back in.'))return;
+  bookings=bookings.filter(function(x){return x.id!==bookingId;});
+  save();
+  deleteBookingOnSheets(bookingId);
+  renderBookingsTab();
+  renderInventory();
+  if(document.getElementById('panel-kits').classList.contains('active'))renderKits();
+  showToast('Booking cancelled','ti-check',false);
+}
+
+/* ── BOOKINGS TAB ── (a single dashboard of everything currently
+   checked out with a due date — the thing that's otherwise easy to
+   lose track of once it's just an event sitting on a calendar) */
+var bookingsFilter = 'all'; // all | overdue | soon | ok
+
+function activeBookingsSorted(){
+  return bookings
+    .filter(function(b){ return b.status==='active'; })
+    .sort(function(a,b){ return new Date(a.dueTime) - new Date(b.dueTime); });
+}
+
+function bookingBucket(b){
+  if(isOverdue(b)) return 'overdue';
+  if((new Date(b.dueTime) - new Date()) < 24*3600000) return 'soon';
+  return 'ok';
+}
+
+function renderBookingsStats(){
+  var all = activeBookingsSorted();
+  var overdue = all.filter(function(b){ return bookingBucket(b)==='overdue'; }).length;
+  var soon = all.filter(function(b){ return bookingBucket(b)==='soon'; }).length;
+  var ok = all.length - overdue - soon;
+
+  var row = document.getElementById('bookings-stats-row');
+  if(!row) return;
+  row.innerHTML =
+    '<div class="stat-card'+(bookingsFilter==='all'?' active-all':'')+'" onclick="setBookingsFilter(\'all\')">'+
+      '<div class="stat-icon stat-icon-all"><i class="ti ti-calendar-event"></i></div>'+
+      '<div class="stat-num">'+all.length+'</div>'+
+      '<div class="stat-lbl">Active bookings</div>'+
+    '</div>'+
+    '<div class="stat-card'+(bookingsFilter==='overdue'?' active':'')+'" style="--cat-bg:'+hexToRgba('#dc2626',0.13)+';--cat-color:#dc2626;--cat-border:'+hexToRgba('#dc2626',0.4)+'" onclick="setBookingsFilter(\'overdue\')">'+
+      '<div class="stat-icon"><i class="ti ti-alert-triangle"></i></div>'+
+      '<div class="stat-num">'+overdue+'</div>'+
+      '<div class="stat-lbl">Overdue</div>'+
+    '</div>'+
+    '<div class="stat-card'+(bookingsFilter==='soon'?' active':'')+'" style="--cat-bg:'+hexToRgba('#d97706',0.13)+';--cat-color:#d97706;--cat-border:'+hexToRgba('#d97706',0.4)+'" onclick="setBookingsFilter(\'soon\')">'+
+      '<div class="stat-icon"><i class="ti ti-clock"></i></div>'+
+      '<div class="stat-num">'+soon+'</div>'+
+      '<div class="stat-lbl">Due within 24h</div>'+
+    '</div>'+
+    '<div class="stat-card'+(bookingsFilter==='ok'?' active':'')+'" style="--cat-bg:'+hexToRgba('#2563eb',0.13)+';--cat-color:#2563eb;--cat-border:'+hexToRgba('#2563eb',0.4)+'" onclick="setBookingsFilter(\'ok\')">'+
+      '<div class="stat-icon"><i class="ti ti-calendar-check"></i></div>'+
+      '<div class="stat-num">'+ok+'</div>'+
+      '<div class="stat-lbl">On track</div>'+
+    '</div>';
+
+  var badge = document.getElementById('nav-overdue-count');
+  if(badge){
+    if(overdue>0){ badge.style.display=''; badge.textContent=overdue; badge.className='badge red'; }
+    else { badge.style.display='none'; }
+  }
+}
+
+function setBookingsFilter(f){
+  bookingsFilter = f;
+  renderBookingsTab();
+}
+
+function renderBookingsTab(){
+  renderBookingsStats();
+  var bar = document.getElementById('bookings-filter-bar');
+  if(bar){
+    bar.innerHTML =
+      '<button class="filter-chip'+(bookingsFilter==='all'?' active':'')+'" onclick="setBookingsFilter(\'all\')">All</button>'+
+      '<button class="filter-chip'+(bookingsFilter==='overdue'?' active':'')+'" onclick="setBookingsFilter(\'overdue\')">Overdue</button>'+
+      '<button class="filter-chip'+(bookingsFilter==='soon'?' active':'')+'" onclick="setBookingsFilter(\'soon\')">Due within 24h</button>'+
+      '<button class="filter-chip'+(bookingsFilter==='ok'?' active':'')+'" onclick="setBookingsFilter(\'ok\')">On track</button>';
+  }
+
+  var list = document.getElementById('bookings-list');
+  if(!list) return;
+  var all = activeBookingsSorted().filter(function(b){
+    if(bookingsFilter==='all') return true;
+    return bookingBucket(b)===bookingsFilter;
+  });
+
+  if(!all.length){
+    list.innerHTML = '<div class="empty"><i class="ti ti-calendar-event"></i><p>'+
+      (bookings.length ? 'Nothing matches this filter.' : 'Nothing booked out with a due date right now.')+
+      '</p></div>';
+    return;
+  }
+
+  list.innerHTML = all.map(function(b){
+    var icon = b.type==='kit' ? 'ti-stack-2' : catIcon((inventory.find(function(x){return x.id===b.refId;})||{}).category||'');
+    var typeLabel = b.type==='kit' ? 'Kit' : 'Item';
+    var noCalNote = !b.eventLink
+      ? '<div class="item-meta" style="color:var(--red);margin-top:3px"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>No Calendar event — check the calendar connection</div>'
+      : '';
+    return '<div class="item-card">'+
+      '<div class="item-cat-icon"><i class="ti '+icon+'"></i></div>'+
+      '<div class="item-info">'+
+        '<div class="item-name">'+b.refName+' <span class="subcat-pill">'+typeLabel+'</span></div>'+
+        '<div class="item-meta">'+b.who+' · out since '+fmtTime(b.checkoutTime)+'</div>'+
+        bookingPillHtml(b)+
+        noCalNote+
+      '</div>'+
+      '<div class="item-actions">'+
+        '<button class="btn btn-icon btn-sm" onclick="cancelBooking(\''+b.id+'\')" title="Cancel booking" style="color:var(--red)"><i class="ti ti-x"></i></button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
 }
 
 /* ── NAV ── */
@@ -1881,6 +2070,7 @@ var tabMeta = {
   scan: {title:'Scan QR code', sub:'Check equipment in and out'},
   inventory: {title:'Inventory', sub:'All equipment at a glance'},
   kits: {title:'Kits', sub:'Group equipment and check it out together'},
+  bookings: {title:'Bookings', sub:'Everything currently out with a due date'},
   log: {title:'Activity log', sub:'Full check-out and check-in history'},
   add: {title:'Add new item', sub:'Register equipment and print a QR label'},
   categories: {title:'Categories', sub:'Manage categories and sub-categories'},
@@ -1899,6 +2089,10 @@ function switchTab(t){
   if(t === 'inventory') renderInventory();
   if(t === 'kits') renderKits();
   if(t === 'categories') renderCategories();
+  if(t === 'bookings'){
+    renderBookingsTab();
+    loadFromSheets();
+  }
   if(t === 'log'){
     renderLog();
     loadFromSheets();
@@ -3796,6 +3990,8 @@ async function loadFromSheets(){
     if(remoteBookings.length){
       bookings=remoteBookings;
       save();
+      if(document.getElementById('panel-bookings').classList.contains('active'))renderBookingsTab();
+      else renderBookingsStats();
     } else if(bookings.length){
       seeded=true; // existing bootstrap flow will push local ones up
     }
@@ -3842,6 +4038,7 @@ renderStats();
 populateKitSelect();
 updateNewSubcatOptions();
 updateNewIdPreview();
+renderBookingsStats();
 </script>
 </div><!-- /app-root -->
 </body>
