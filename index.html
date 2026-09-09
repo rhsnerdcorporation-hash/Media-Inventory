@@ -157,6 +157,17 @@
   }
   .badge.green { background: var(--green-bg); color: var(--green); }
   .badge.red { background: var(--red-bg); color: var(--red); }
+  .badge.new-pill {
+    background: linear-gradient(135deg,#8b5cf6,#ec4899);
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    animation: newPillPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes newPillPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(236,72,153,0.45); }
+    50% { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(236,72,153,0); }
+  }
 
   .sidebar-footer {
     padding: 14px;
@@ -340,6 +351,7 @@
     padding: 2px 9px; border-radius: 20px;
   }
   .booking-pill i { font-size: 12px; }
+  .booking-pill .due-abs { opacity: 0.75; font-weight: 400; }
   .due-ok   { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
   .due-soon { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
   .due-over { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
@@ -1127,6 +1139,7 @@
         </button>
         <button class="nav-item" onclick="switchTab('bookings')" id="nav-bookings">
           <i class="ti ti-calendar-event"></i> Bookings
+          <span class="badge new-pill" id="nav-bookings-new">New</span>
           <span class="badge" id="nav-overdue-count" style="display:none">0</span>
         </button>
         <button class="nav-item" onclick="switchTab('log')" id="nav-log">
@@ -1588,7 +1601,7 @@
    It looks like: https://script.google.com/macros/s/AKfycb..xyz../exec
    See Code.gs + the setup guide for how to get this.
    ========================================================================= */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzABShNLHv9jtQVAbAp-OTSkpoynam9hMH5YdGVsCIlnvUA7qhIQou8AEBxv2n5fGjk/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbxgTpAbhDgqyH-Szugk7QD6vfboLrgr3r4veerR4bprM-8stsL2t2c9HAKeyydcDxY7/exec";
 
 /* ── DATA ── */
 /* Categories are now user-editable (see the Categories tab) instead of
@@ -1658,6 +1671,21 @@ var iconChoices = [
 
 var inventory = JSON.parse(localStorage.getItem('cam_inv') || 'null') || [];
 var bookings = JSON.parse(localStorage.getItem('cam_bookings') || '[]');
+
+/* Bubbly "New" pill on the Bookings nav item — introduces the feature,
+   then dismisses itself for good the first time someone actually opens
+   the tab, so it doesn't nag forever. */
+function dismissBookingsNewPill(){
+  localStorage.setItem('cam_seen_bookings_new','1');
+  var pill = document.getElementById('nav-bookings-new');
+  if(pill) pill.style.display = 'none';
+}
+if(localStorage.getItem('cam_seen_bookings_new')==='1'){
+  document.addEventListener('DOMContentLoaded', function(){
+    var pill = document.getElementById('nav-bookings-new');
+    if(pill) pill.style.display = 'none';
+  });
+}
 var log = JSON.parse(localStorage.getItem('cam_log') || '[]');
 var kits = JSON.parse(localStorage.getItem('cam_kits') || '[]');
 var categories = JSON.parse(localStorage.getItem('cam_categories') || 'null') || defaultCategories();
@@ -1816,7 +1844,7 @@ function bookingPillHtml(b, opts){
   var soon = !overdue && (new Date(b.dueTime) - new Date()) < 24*3600000;
   var cls = overdue ? 'due-over' : soon ? 'due-soon' : 'due-ok';
   var icon = overdue ? 'ti-alert-triangle' : 'ti-clock';
-  var label = overdue ? dueDeltaText(b.dueTime) : ('Due '+new Date(b.dueTime).toLocaleString('en-NZ',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}));
+  var label = dueDeltaText(b.dueTime)+' <span class="due-abs">('+new Date(b.dueTime).toLocaleString('en-NZ',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+')</span>';
   var html = '<div class="booking-row">'+
     '<span class="booking-pill '+cls+'"><i class="ti '+icon+'"></i>'+label+'</span>';
   if(!opts.hideControls){
@@ -1960,36 +1988,123 @@ function cancelBooking(bookingId){
   showToast('Booking cancelled','ti-check',false);
 }
 
-/* ── BOOKINGS TAB ── (a single dashboard of everything currently
-   checked out with a due date — the thing that's otherwise easy to
-   lose track of once it's just an event sitting on a calendar) */
-var bookingsFilter = 'all'; // all | overdue | soon | ok
+/* ── BOOKINGS TAB ── (a single, unified dashboard of everything currently
+   checked out — both items/kits that have a tracked due date (a real
+   "booking") and items/kits that are simply checked out with no due date
+   set yet — so this is a complete "what's out and with whom" view, not
+   just the subset that happens to have a due date.) */
+var bookingsFilter = 'all'; // all | overdue | soon | ok | nodate
+var bookingsTabEntriesMap = {}; // entry.id -> entry, rebuilt on every render so click handlers can look entries up without embedding quotes/strings in onclick attributes
 
 function activeBookingsSorted(){
-  return bookings
-    .filter(function(b){ return b.status==='active'; })
-    .sort(function(a,b){ return new Date(a.dueTime) - new Date(b.dueTime); });
+  var entries = [];
+  var coveredItemIds = {}; // items already represented via a kit entry (real booking or synthetic) or their own item-level booking
+
+  // 1. Real bookings (item or kit) that already have a tracked due date.
+  bookings.filter(function(b){ return b.status==='active'; }).forEach(function(b){
+    var entry = {
+      id: 'bk-'+b.id,
+      bookingId: b.id,
+      type: b.type,
+      refId: b.refId,
+      refName: b.refName,
+      who: b.who || '—',
+      checkoutTime: b.checkoutTime,
+      dueTime: b.dueTime,
+      eventLink: b.eventLink
+    };
+    if(b.type==='kit'){
+      var kitObj = kits.find(function(k){ return k.id===b.refId; });
+      if(kitObj){
+        var allItems = kitItems(kitObj);
+        var outNow = allItems.filter(function(x){ return x.status==='out'||x.status==='missing'; });
+        entry.outCount = outNow.length;
+        entry.totalCount = allItems.length;
+        entry.hasMissing = outNow.some(function(x){ return x.status==='missing'; });
+      }
+      (b.itemIds||[]).forEach(function(id){ coveredItemIds[id]=true; });
+    } else {
+      coveredItemIds[b.refId]=true;
+    }
+    entries.push(entry);
+  });
+
+  // 2. Kits that are out (partially or fully) but have no active kit-level
+  //    booking — still worth surfacing, just without a due date yet.
+  kits.forEach(function(kit){
+    if(findActiveBookingForKit(kit.id)) return; // already represented above
+    var items = kitItems(kit);
+    var outItems = items.filter(function(x){ return x.status==='out'||x.status==='missing'; });
+    if(!outItems.length) return;
+    outItems.forEach(function(x){ coveredItemIds[x.id]=true; });
+    var whoList=[], seenWho={};
+    outItems.forEach(function(x){ if(x.lastWho && !seenWho[x.lastWho]){ seenWho[x.lastWho]=true; whoList.push(x.lastWho); } });
+    var checkoutTime='';
+    outItems.forEach(function(x){ if(x.lastTime && (!checkoutTime || x.lastTime<checkoutTime)) checkoutTime=x.lastTime; });
+    entries.push({
+      id: 'kn-'+kit.id,
+      type: 'kit',
+      refId: kit.id,
+      refName: kit.name,
+      who: whoList.length ? whoList.join(', ') : '—',
+      checkoutTime: checkoutTime,
+      dueTime: null,
+      outCount: outItems.length,
+      totalCount: items.length,
+      hasMissing: outItems.some(function(x){ return x.status==='missing'; })
+    });
+  });
+
+  // 3. Individual items that are out, not already represented via a kit
+  //    entry above or their own item-level booking.
+  inventory.forEach(function(item){
+    if(item.status!=='out' && item.status!=='missing') return;
+    if(coveredItemIds[item.id]) return;
+    entries.push({
+      id: 'in-'+item.id,
+      type: 'item',
+      refId: item.id,
+      refName: item.name,
+      who: item.lastWho || '—',
+      checkoutTime: item.lastTime,
+      dueTime: null,
+      status: item.status
+    });
+  });
+
+  entries.forEach(function(e){ bookingsTabEntriesMap[e.id]=e; });
+
+  return entries.sort(function(a,b){
+    // Overdue / soonest-due first, then no-due-date entries by most
+    // recently checked out.
+    var ad = a.dueTime ? new Date(a.dueTime).getTime() : Infinity;
+    var bd = b.dueTime ? new Date(b.dueTime).getTime() : Infinity;
+    if(ad!==bd) return ad-bd;
+    return new Date(b.checkoutTime||0) - new Date(a.checkoutTime||0);
+  });
 }
 
-function bookingBucket(b){
-  if(isOverdue(b)) return 'overdue';
-  if((new Date(b.dueTime) - new Date()) < 24*3600000) return 'soon';
+function bookingBucket(entry){
+  if(!entry.dueTime) return 'nodate';
+  if(new Date(entry.dueTime) < new Date()) return 'overdue';
+  if((new Date(entry.dueTime) - new Date()) < 24*3600000) return 'soon';
   return 'ok';
 }
 
 function renderBookingsStats(){
   var all = activeBookingsSorted();
-  var overdue = all.filter(function(b){ return bookingBucket(b)==='overdue'; }).length;
-  var soon = all.filter(function(b){ return bookingBucket(b)==='soon'; }).length;
-  var ok = all.length - overdue - soon;
+  var overdue = all.filter(function(e){ return bookingBucket(e)==='overdue'; }).length;
+  var soon = all.filter(function(e){ return bookingBucket(e)==='soon'; }).length;
+  var nodate = all.filter(function(e){ return bookingBucket(e)==='nodate'; }).length;
+  var ok = all.length - overdue - soon - nodate;
 
   var row = document.getElementById('bookings-stats-row');
   if(!row) return;
   row.innerHTML =
     '<div class="stat-card'+(bookingsFilter==='all'?' active-all':'')+'" onclick="setBookingsFilter(\'all\')">'+
-      '<div class="stat-icon stat-icon-all"><i class="ti ti-calendar-event"></i></div>'+
+      '<div class="stat-icon stat-icon-all"><i class="ti ti-package"></i></div>'+
       '<div class="stat-num">'+all.length+'</div>'+
-      '<div class="stat-lbl">Active bookings</div>'+
+      '<div class="stat-lbl">Currently out</div>'+
     '</div>'+
     '<div class="stat-card'+(bookingsFilter==='overdue'?' active':'')+'" style="--cat-bg:'+hexToRgba('#dc2626',0.13)+';--cat-color:#dc2626;--cat-border:'+hexToRgba('#dc2626',0.4)+'" onclick="setBookingsFilter(\'overdue\')">'+
       '<div class="stat-icon"><i class="ti ti-alert-triangle"></i></div>'+
@@ -2005,6 +2120,11 @@ function renderBookingsStats(){
       '<div class="stat-icon"><i class="ti ti-calendar-check"></i></div>'+
       '<div class="stat-num">'+ok+'</div>'+
       '<div class="stat-lbl">On track</div>'+
+    '</div>'+
+    '<div class="stat-card'+(bookingsFilter==='nodate'?' active':'')+'" style="--cat-bg:'+hexToRgba('#64748b',0.13)+';--cat-color:#64748b;--cat-border:'+hexToRgba('#64748b',0.4)+'" onclick="setBookingsFilter(\'nodate\')">'+
+      '<div class="stat-icon"><i class="ti ti-calendar-off"></i></div>'+
+      '<div class="stat-num">'+nodate+'</div>'+
+      '<div class="stat-lbl">No due date</div>'+
     '</div>';
 
   var badge = document.getElementById('nav-overdue-count');
@@ -2027,42 +2147,122 @@ function renderBookingsTab(){
       '<button class="filter-chip'+(bookingsFilter==='all'?' active':'')+'" onclick="setBookingsFilter(\'all\')">All</button>'+
       '<button class="filter-chip'+(bookingsFilter==='overdue'?' active':'')+'" onclick="setBookingsFilter(\'overdue\')">Overdue</button>'+
       '<button class="filter-chip'+(bookingsFilter==='soon'?' active':'')+'" onclick="setBookingsFilter(\'soon\')">Due within 24h</button>'+
-      '<button class="filter-chip'+(bookingsFilter==='ok'?' active':'')+'" onclick="setBookingsFilter(\'ok\')">On track</button>';
+      '<button class="filter-chip'+(bookingsFilter==='ok'?' active':'')+'" onclick="setBookingsFilter(\'ok\')">On track</button>'+
+      '<button class="filter-chip'+(bookingsFilter==='nodate'?' active':'')+'" onclick="setBookingsFilter(\'nodate\')">No due date</button>';
   }
 
   var list = document.getElementById('bookings-list');
   if(!list) return;
-  var all = activeBookingsSorted().filter(function(b){
+  var all = activeBookingsSorted().filter(function(e){
     if(bookingsFilter==='all') return true;
-    return bookingBucket(b)===bookingsFilter;
+    return bookingBucket(e)===bookingsFilter;
   });
 
   if(!all.length){
+    var anyOut = inventory.some(function(x){ return x.status==='out'||x.status==='missing'; });
     list.innerHTML = '<div class="empty"><i class="ti ti-calendar-event"></i><p>'+
-      (bookings.length ? 'Nothing matches this filter.' : 'Nothing booked out with a due date right now.')+
+      (anyOut ? 'Nothing matches this filter.' : 'Nothing checked out right now.')+
       '</p></div>';
     return;
   }
 
-  list.innerHTML = all.map(function(b){
-    var icon = b.type==='kit' ? 'ti-stack-2' : catIcon((inventory.find(function(x){return x.id===b.refId;})||{}).category||'');
-    var typeLabel = b.type==='kit' ? 'Kit' : 'Item';
-    var noCalNote = !b.eventLink
+  list.innerHTML = all.map(function(e){
+    var icon = e.type==='kit' ? 'ti-stack-2' : catIcon((inventory.find(function(x){return x.id===e.refId;})||{}).category||'');
+    var typeLabel = e.type==='kit' ? 'Kit' : 'Item';
+    var countNote = (e.type==='kit' && e.outCount!==undefined)
+      ? ' · '+e.outCount+' of '+e.totalCount+' item'+(e.totalCount===1?'':'s')+' out'
+      : '';
+    var missingNote = (e.hasMissing || e.status==='missing')
+      ? ' · <span style="color:var(--red)">includes missing item'+(e.outCount>1?'s':'')+'</span>'
+      : '';
+    var noCalNote = (e.dueTime && !e.eventLink)
       ? '<div class="item-meta" style="color:var(--red);margin-top:3px"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>No Calendar event — check the calendar connection</div>'
+      : '';
+    var cancelBtn = e.bookingId
+      ? '<button class="btn btn-icon btn-sm" onclick="cancelBooking(\''+e.bookingId+'\')" title="Cancel booking" style="color:var(--red)"><i class="ti ti-x"></i></button>'
       : '';
     return '<div class="item-card">'+
       '<div class="item-cat-icon"><i class="ti '+icon+'"></i></div>'+
       '<div class="item-info">'+
-        '<div class="item-name">'+b.refName+' <span class="subcat-pill">'+typeLabel+'</span></div>'+
-        '<div class="item-meta">'+b.who+' · out since '+fmtTime(b.checkoutTime)+'</div>'+
-        bookingPillHtml(b)+
+        '<div class="item-name">'+e.refName+' <span class="subcat-pill">'+typeLabel+'</span></div>'+
+        '<div class="item-meta">'+e.who+' · out since '+fmtTime(e.checkoutTime)+countNote+missingNote+'</div>'+
+        bookingsTabPillHtml(e)+
         noCalNote+
       '</div>'+
       '<div class="item-actions">'+
-        '<button class="btn btn-icon btn-sm" onclick="cancelBooking(\''+b.id+'\')" title="Cancel booking" style="color:var(--red)"><i class="ti ti-x"></i></button>'+
+        cancelBtn+
       '</div>'+
     '</div>';
   }).join('');
+}
+
+/* Due-date pill + controls specifically for the Bookings tab's unified
+   list. Entries with a tracked due date get the usual overdue/soon/on-
+   track pill (plus Add time / Calendar controls when backed by a real
+   booking); entries with no due date yet get a neutral "No due date set"
+   pill with a quick way to add one on the spot. */
+function bookingsTabPillHtml(entry){
+  if(entry.dueTime){
+    var overdue = new Date(entry.dueTime) < new Date();
+    var soon = !overdue && (new Date(entry.dueTime) - new Date()) < 24*3600000;
+    var cls = overdue ? 'due-over' : soon ? 'due-soon' : 'due-ok';
+    var icon = overdue ? 'ti-alert-triangle' : 'ti-clock';
+    var label = dueDeltaText(entry.dueTime)+' <span class="due-abs">('+new Date(entry.dueTime).toLocaleString('en-NZ',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+')</span>';
+    var html = '<div class="booking-row"><span class="booking-pill '+cls+'"><i class="ti '+icon+'"></i>'+label+'</span>';
+    if(entry.bookingId){
+      html += '<button type="button" class="booking-mini-btn" onclick="event.stopPropagation();openExtendPrompt(\''+entry.bookingId+'\')"><i class="ti ti-clock-plus"></i> Add time</button>';
+      if(entry.eventLink){
+        html += '<a class="booking-mini-btn" href="'+entry.eventLink+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="ti ti-calendar-event"></i> Calendar</a>';
+      }
+    }
+    html += '</div>';
+    return html;
+  }
+  return '<div class="booking-row">'+
+    '<span class="booking-pill" style="background:var(--surface2);color:var(--mid);border:1px solid var(--border-strong)"><i class="ti ti-calendar-off"></i> No due date set</span>'+
+    '<button type="button" class="booking-mini-btn" onclick="event.stopPropagation();openSetDuePrompt(\''+entry.id+'\')"><i class="ti ti-calendar-plus"></i> Set due date</button>'+
+  '</div>';
+}
+
+/* Lets someone attach a due date (and Calendar event) to an item or kit
+   that's already checked out but was never given one — creates a new
+   booking on the fly instead of requiring the item to be checked back in
+   and back out again just to add a due date. */
+function openSetDuePrompt(entryId){
+  var entry = bookingsTabEntriesMap[entryId];
+  if(!entry) return;
+  var choice = prompt(
+    'Set a due date for "'+entry.refName+'"\n\nType one of: 1d, 3d, 1w — or a custom date/time (e.g. 2026-08-20 17:00)',
+    '1d'
+  );
+  if(choice===null) return;
+  choice = choice.trim();
+  var presets = {'1d':24,'3d':72,'1w':168};
+  var newDue;
+  if(presets[choice.toLowerCase()]){
+    newDue = new Date(Date.now() + presets[choice.toLowerCase()]*3600000);
+  } else {
+    var parsed = new Date(choice.replace(' ','T'));
+    if(isNaN(parsed.getTime())){ showToast('Could not understand that date','ti-alert-triangle',true); return; }
+    newDue = parsed;
+  }
+  var booking = {
+    id: genBookingId(), type: entry.type, refId: entry.refId, refName: entry.refName,
+    who: (entry.who && entry.who!=='—') ? entry.who : '',
+    checkoutTime: entry.checkoutTime || new Date().toISOString(),
+    dueTime: newDue.toISOString(), status:'active', eventId:'', eventLink:''
+  };
+  if(entry.type==='kit'){
+    var kit = kits.find(function(k){ return k.id===entry.refId; });
+    booking.itemIds = kit ? kitItems(kit).filter(function(x){ return x.status==='out'||x.status==='missing'; }).map(function(x){ return x.id; }) : [];
+  }
+  bookings.push(booking);
+  save();
+  createBookingOnSheets(booking);
+  showToast('Due date set for "'+entry.refName+'"','ti-calendar-event',false);
+  renderBookingsTab();
+  renderInventory();
+  if(document.getElementById('panel-kits').classList.contains('active')) renderKits();
 }
 
 /* ── NAV ── */
@@ -2084,6 +2284,7 @@ function switchTab(t){
   document.getElementById('nav-'+t) && document.getElementById('nav-'+t).classList.add('active');
   document.getElementById('topbar-title').textContent = tabMeta[t].title;
   document.getElementById('topbar-sub').textContent = tabMeta[t].sub;
+  if(t === 'bookings') dismissBookingsNewPill();
   if(t !== 'scan') stopCamera();
   if(t === 'scan') populateKitSelect();
   if(t === 'inventory') renderInventory();
