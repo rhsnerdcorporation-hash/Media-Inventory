@@ -2011,7 +2011,8 @@ function activeBookingsSorted(){
       who: b.who || '—',
       checkoutTime: b.checkoutTime,
       dueTime: b.dueTime,
-      eventLink: b.eventLink
+      eventLink: b.eventLink,
+      calendarError: b.calendarError || ''
     };
     if(b.type==='kit'){
       var kitObj = kits.find(function(k){ return k.id===b.refId; });
@@ -2056,10 +2057,15 @@ function activeBookingsSorted(){
   });
 
   // 3. Individual items that are out, not already represented via a kit
-  //    entry above or their own item-level booking.
+  //    entry above or their own item-level booking, and not a member of
+  //    ANY kit — an item that belongs to a kit is only ever surfaced
+  //    through that kit's own booking entry (case 1/2 above), never as a
+  //    separate standalone row, even if that kit itself has no active
+  //    booking entry for some reason.
   inventory.forEach(function(item){
     if(item.status!=='out' && item.status!=='missing') return;
     if(coveredItemIds[item.id]) return;
+    if(kitsContainingItem(item.id).length) return;
     entries.push({
       id: 'in-'+item.id,
       type: 'item',
@@ -2167,29 +2173,39 @@ function renderBookingsTab(){
   }
 
   list.innerHTML = all.map(function(e){
-    var icon = e.type==='kit' ? 'ti-stack-2' : catIcon((inventory.find(function(x){return x.id===e.refId;})||{}).category||'');
-    var typeLabel = e.type==='kit' ? 'Kit' : 'Item';
-    var countNote = (e.type==='kit' && e.outCount!==undefined)
+    var isKit = e.type==='kit';
+    var refItem = isKit ? null : inventory.find(function(x){return x.id===e.refId;});
+    var refKit = isKit ? kits.find(function(k){return k.id===e.refId;}) : null;
+    var icon = isKit ? 'ti-stack-2' : catIcon((refItem||{}).category||'');
+    var cssVars = isKit ? kitTypeCssVars((refKit||{}).type||'') : catCssVars((refItem||{}).category||'');
+    var typeLabel = isKit ? 'Kit' : 'Item';
+    var countNote = (isKit && e.outCount!==undefined)
       ? ' · '+e.outCount+' of '+e.totalCount+' item'+(e.totalCount===1?'':'s')+' out'
       : '';
     var missingNote = (e.hasMissing || e.status==='missing')
       ? ' · <span style="color:var(--red)">includes missing item'+(e.outCount>1?'s':'')+'</span>'
       : '';
     var noCalNote = (e.dueTime && !e.eventLink)
-      ? '<div class="item-meta" style="color:var(--red);margin-top:3px"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>No Calendar event — check the calendar connection</div>'
+      ? '<div class="item-meta" style="color:var(--red);margin-top:3px"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>'+
+        (e.calendarError ? ('Calendar sync failed: '+e.calendarError) : 'No Calendar event — check the calendar connection')+
+        '</div>'
+      : '';
+    var retryBtn = (e.bookingId && e.dueTime && !e.eventLink)
+      ? '<button class="btn btn-icon btn-sm" onclick="retryCalendarSync(\''+e.bookingId+'\')" title="Retry Calendar sync"><i class="ti ti-refresh"></i></button>'
       : '';
     var cancelBtn = e.bookingId
       ? '<button class="btn btn-icon btn-sm" onclick="cancelBooking(\''+e.bookingId+'\')" title="Cancel booking" style="color:var(--red)"><i class="ti ti-x"></i></button>'
       : '';
     return '<div class="item-card">'+
-      '<div class="item-cat-icon"><i class="ti '+icon+'"></i></div>'+
+      '<div class="item-cat-icon" style="'+cssVars+'"><i class="ti '+icon+'"></i></div>'+
       '<div class="item-info">'+
-        '<div class="item-name">'+e.refName+' <span class="subcat-pill">'+typeLabel+'</span></div>'+
+        '<div class="item-name">'+e.refName+' <span class="subcat-pill" style="'+cssVars+'background:var(--cat-bg);color:var(--cat-color);border-color:var(--cat-border)">'+typeLabel+'</span></div>'+
         '<div class="item-meta">'+e.who+' · out since '+fmtTime(e.checkoutTime)+countNote+missingNote+'</div>'+
         bookingsTabPillHtml(e)+
         noCalNote+
       '</div>'+
       '<div class="item-actions">'+
+        retryBtn+
         cancelBtn+
       '</div>'+
     '</div>';
@@ -2263,6 +2279,17 @@ function openSetDuePrompt(entryId){
   renderBookingsTab();
   renderInventory();
   if(document.getElementById('panel-kits').classList.contains('active')) renderKits();
+}
+
+/* Re-sends the create_booking request for an existing booking so the
+   backend can try creating the Calendar event again — useful after fixing
+   a Calendar ID / permission problem in the Apps Script without having to
+   cancel and recreate the whole booking. */
+async function retryCalendarSync(bookingId){
+  var b = bookings.find(function(x){return x.id===bookingId;});
+  if(!b) return;
+  showToast('Retrying Calendar sync…','ti-refresh',false);
+  await createBookingOnSheets(b);
 }
 
 /* ── NAV ── */
