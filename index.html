@@ -1249,8 +1249,11 @@
                   </div>
                 </div>
                 <div class="form-row" id="who-due-row">
-                  <label>Due back (optional)</label>
-                  <input type="datetime-local" class="input-field" id="who-due-input" />
+                  <label>Due back <span style="color:var(--red)">*</span></label>
+                  <button type="button" class="btn btn-full" id="who-due-picker-btn" onclick="openDueDatePrompt('item')" style="justify-content:flex-start">
+                    <i class="ti ti-calendar-event"></i> <span id="who-due-picker-label">Choose a due date…</span>
+                  </button>
+                  <input type="hidden" id="who-due-input" />
                 </div>
                 <div id="result-booking-status"></div>
                 <div class="result-actions" id="result-actions"></div>
@@ -1282,8 +1285,11 @@
                   </div>
                 </div>
                 <div class="form-row" id="kit-who-due-row">
-                  <label>Due back (optional)</label>
-                  <input type="datetime-local" class="input-field" id="kit-who-due-input" />
+                  <label>Due back <span style="color:var(--red)">*</span></label>
+                  <button type="button" class="btn btn-full" id="kit-who-due-picker-btn" onclick="openDueDatePrompt('kit')" style="justify-content:flex-start">
+                    <i class="ti ti-calendar-event"></i> <span id="kit-who-due-picker-label">Choose a due date…</span>
+                  </button>
+                  <input type="hidden" id="kit-who-due-input" />
                 </div>
                 <button class="btn btn-out btn-full" style="margin-top:10px" id="kit-checkout-btn" onclick="doKitCheckout()"><i class="ti ti-arrow-right"></i> Check out kit</button>
                 </div>
@@ -1306,6 +1312,9 @@
       <!-- INVENTORY PANEL -->
       <div class="panel" id="panel-inventory">
         <div class="stat-row" id="stats-row"></div>
+        <div class="table-toolbar">
+          <input type="text" class="input-field" id="inventory-search" placeholder="Search by name or ID…" oninput="renderInventory()" />
+        </div>
         <div class="filter-bar" id="filter-bar"></div>
         <div class="filter-bar" id="minor-filter-bar" style="display:none">
           <select class="select-field" id="minor-filter-select" onchange="setMinorFilter(this.value)" style="max-width:240px">
@@ -1889,6 +1898,29 @@ function openExtendPrompt(bookingId){
     baseDate: base,
     initialDate: base,
     onConfirm: function(newDue){ extendBooking(b.id, newDue.toISOString()); }
+  });
+}
+
+/* Opens the shared date-picker modal to collect the (now compulsory) due
+   date for a fresh checkout — used by both the single-item result card
+   and the kit result card, since both require a due date before the
+   checkout button can actually be used. `kind` is 'item' or 'kit' and
+   selects which hidden input + label gets the chosen date. */
+function openDueDatePrompt(kind){
+  var isKit = kind==='kit';
+  var inputId = isKit ? 'kit-who-due-input' : 'who-due-input';
+  var labelId = isKit ? 'kit-who-due-picker-label' : 'who-due-picker-label';
+  var existing = document.getElementById(inputId).value;
+  var base = new Date();
+  openDatePickerModal({
+    title: 'Set due date',
+    subtitle: 'A due date is required before checking out.',
+    baseDate: base,
+    initialDate: existing ? new Date(existing) : new Date(Date.now()+24*3600000),
+    onConfirm: function(newDue){
+      document.getElementById(inputId).value = newDue.toISOString();
+      document.getElementById(labelId).textContent = newDue.toLocaleString('en-NZ',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    }
   });
 }
 
@@ -2488,16 +2520,24 @@ function setMinorFilter(v){
 
 function renderInventory(){
   renderStats();
+  var searchEl=document.getElementById('inventory-search');
+  var search=searchEl?searchEl.value.trim().toLowerCase():'';
   var items = inventory.filter(function(x){
-    if(inventoryFilter==='all') return true;
-    if(inventoryFilter==='out') return x.status==='out'||x.status==='missing';
-    if(x.category!==inventoryFilter) return false;
-    if(minorFilter) return x.subcategory===minorFilter;
+    if(inventoryFilter==='all'){ /* fall through to search check below */ }
+    else if(inventoryFilter==='out'){ if(!(x.status==='out'||x.status==='missing'))return false; }
+    else {
+      if(x.category!==inventoryFilter) return false;
+      if(minorFilter && x.subcategory!==minorFilter) return false;
+    }
+    if(search){
+      var hay=(x.name+' '+x.id).toLowerCase();
+      if(hay.indexOf(search)===-1) return false;
+    }
     return true;
   });
   var list = document.getElementById('item-list');
   if(!items.length){
-    list.innerHTML='<div class="empty"><i class="ti ti-package"></i><p>No items match this filter.</p></div>';
+    list.innerHTML='<div class="empty"><i class="ti ti-package"></i><p>'+(search?'No items match "'+search.replace(/</g,'&lt;')+'".':'No items match this filter.')+'</p></div>';
     return;
   }
   list.innerHTML = items.map(function(item){
@@ -2762,6 +2802,7 @@ function showResultCard(item){
   document.getElementById('who-first-input').value='';
   document.getElementById('who-last-input').value='';
   document.getElementById('who-due-input').value='';
+  document.getElementById('who-due-picker-label').textContent='Choose a due date…';
   var ra=document.getElementById('result-actions');
   var kitShortcuts=document.getElementById('result-kit-shortcuts');
   var resultBookingWrap=document.getElementById('result-booking-status');
@@ -2798,7 +2839,9 @@ function doAction(action){
   var first=document.getElementById('who-first-input').value.trim();
   var last=document.getElementById('who-last-input').value.trim();
   var who=(first+' '+last).trim();
+  var dueVal = document.getElementById('who-due-input').value;
   if(action==='out'&&(!first||!last)){showToast('Enter a first and last name before checking out','ti-alert-triangle',true);return;}
+  if(action==='out'&&!dueVal){showToast('Choose a due date before checking out','ti-alert-triangle',true);return;}
   var now=new Date().toISOString();
   var item=inventory.find(function(x){return x.id===currentItem.id;});
   if(action==='out'){item.status='out';item.lastWho=who;item.lastTime=now;}
@@ -2806,7 +2849,6 @@ function doAction(action){
   else{item.status='missing';item.lastTime=now;}
   var entry={action:action,itemId:item.id,itemName:item.name,category:item.category,who:who||item.lastWho,class:'',time:now};
   log.push(entry);
-  var dueVal = document.getElementById('who-due-input').value;
   if(action==='out'&&dueVal){
     var booking = { id: genBookingId(), type:'item', refId:item.id, refName:item.name,
       who: who, checkoutTime: now, dueTime: new Date(dueVal).toISOString(), status:'active', eventId:'', eventLink:'' };
@@ -2821,6 +2863,7 @@ function doAction(action){
   pushToSheets(entry);
   syncItemToSheets(item);
   document.getElementById('who-due-input').value='';
+  document.getElementById('who-due-picker-label').textContent='Choose a due date…';
   document.getElementById('result-card').classList.remove('visible');
   document.getElementById('result-kit-shortcuts').innerHTML='';
   currentItem=null;
@@ -2842,19 +2885,37 @@ function quickAction(id,action){
     last=last.trim();
     if(!first||!last){showToast('A first and last name are required to check out','ti-alert-triangle',true);return;}
     var who=first+' '+last;
-    var now=new Date().toISOString();
-    item.status='out';item.lastWho=who;item.lastTime=now;
-    var entry={action:'out',itemId:item.id,itemName:item.name,category:item.category,who:who,class:'',time:now};
-    log.push(entry);save();pushToSheets(entry);syncItemToSheets(item);
-    showToast(item.name+' checked out to '+who,'ti-arrow-right',false);
+    // A due date is compulsory for every checkout — collect it with the
+    // same custom date-picker modal used elsewhere, then finish the
+    // checkout once it's confirmed (or bail out if they cancel).
+    openDatePickerModal({
+      title: 'Set due date',
+      subtitle: 'A due date is required to check out "'+item.name+'".',
+      baseDate: new Date(),
+      initialDate: new Date(Date.now()+24*3600000),
+      onConfirm: function(newDue){
+        var now=new Date().toISOString();
+        item.status='out';item.lastWho=who;item.lastTime=now;
+        var entry={action:'out',itemId:item.id,itemName:item.name,category:item.category,who:who,class:'',time:now};
+        log.push(entry);
+        var booking = { id: genBookingId(), type:'item', refId:item.id, refName:item.name,
+          who: who, checkoutTime: now, dueTime: newDue.toISOString(), status:'active', eventId:'', eventLink:'' };
+        bookings.push(booking);
+        save();pushToSheets(entry);syncItemToSheets(item);createBookingOnSheets(booking);
+        showToast(item.name+' checked out to '+who,'ti-arrow-right',false);
+        renderInventory();
+      }
+    });
   } else {
     var now2=new Date().toISOString();
     item.status='in';item.lastTime=now2;
     var entry2={action:'in',itemId:item.id,itemName:item.name,category:item.category,who:item.lastWho,class:'',time:now2};
     log.push(entry2);save();pushToSheets(entry2);syncItemToSheets(item);
+    var openB = findActiveBookingForItem(item.id);
+    if(openB && openB.type==='item'){ openB.status='returned'; openB.returnedTime=now2; completeBookingOnSheets(openB.id); }
     showToast(item.name+' checked in','ti-check',false);
+    renderInventory();
   }
-  renderInventory();
 }
 
 /* ── ADD ITEM ── */
@@ -3673,6 +3734,7 @@ function checkOutKitFromItem(kitId){
   var first=document.getElementById('who-first-input').value.trim();
   var last=document.getElementById('who-last-input').value.trim();
   var who=(first+' '+last).trim();
+  var dueVal=document.getElementById('who-due-input').value;
   if(!first||!last){
     first=prompt('Student or teacher first name:');
     if(first===null)return;
@@ -3683,7 +3745,22 @@ function checkOutKitFromItem(kitId){
     if(!first||!last){showToast('A first and last name are required to check out','ti-alert-triangle',true);return;}
     who=first+' '+last;
   }
-  applyKitCheckout(kit,who,'');
+  if(!dueVal){
+    openDatePickerModal({
+      title: 'Set due date',
+      subtitle: 'A due date is required to check out "'+kit.name+'".',
+      baseDate: new Date(),
+      initialDate: new Date(Date.now()+24*3600000),
+      onConfirm: function(newDue){
+        applyKitCheckout(kit,who,'',newDue.toISOString());
+        document.getElementById('result-card').classList.remove('visible');
+        document.getElementById('result-kit-shortcuts').innerHTML='';
+        currentItem=null;
+      }
+    });
+    return;
+  }
+  applyKitCheckout(kit,who,'',new Date(dueVal).toISOString());
   document.getElementById('result-card').classList.remove('visible');
   document.getElementById('result-kit-shortcuts').innerHTML='';
   currentItem=null;
@@ -3792,6 +3869,7 @@ function showKitResultCard(kit){
   document.getElementById('kit-who-first-input').value='';
   document.getElementById('kit-who-last-input').value='';
   document.getElementById('kit-who-due-input').value='';
+  document.getElementById('kit-who-due-picker-label').textContent='Choose a due date…';
   var kitBookingWrap=document.getElementById('kit-result-booking-status');
   if(kitBookingWrap){
     kitBookingWrap.innerHTML=bookingPillHtml(findActiveBookingForKit(kit.id));
@@ -3839,7 +3917,8 @@ function doKitCheckout(){
   if(!first||!last){showToast('Enter a first and last name before checking out','ti-alert-triangle',true);return;}
   var who=first+' '+last;
   var dueVal=document.getElementById('kit-who-due-input').value;
-  applyKitCheckout(currentKit,who,'', dueVal ? new Date(dueVal).toISOString() : null);
+  if(!dueVal){showToast('Choose a due date before checking out','ti-alert-triangle',true);return;}
+  applyKitCheckout(currentKit,who,'', new Date(dueVal).toISOString());
   document.getElementById('kit-result-card').classList.remove('visible');
   currentKit=null;
 }
