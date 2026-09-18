@@ -79,74 +79,10 @@
   .success-card h2{font-size:16px;margin-bottom:6px;justify-content:center;}
   .success-card p{font-size:13px;color:var(--mid);margin-bottom:18px;}
 
-  /* ── SIGN-IN GATE ── */
-  #gate-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-  .gate-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:32px 28px;width:100%;max-width:360px;text-align:center;}
-  .gate-icon{width:48px;height:48px;background:var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
-  .gate-icon i{font-size:24px;color:#fff;}
-  .gate-card h1{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;margin-bottom:4px;}
-  .gate-card p{font-size:12px;color:var(--muted);margin-bottom:20px;}
-  .gate-role-row{display:flex;flex-direction:column;gap:10px;}
-  .gate-role-btn{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--white);cursor:pointer;text-align:left;transition:all .12s;}
-  .gate-role-btn:hover{border-color:var(--ink);background:var(--surface);}
-  .gate-role-btn .gr-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;}
-  .gate-role-btn.gr-student .gr-icon{background:var(--blue-bg);color:var(--blue);}
-  .gate-role-btn.gr-teacher .gr-icon{background:#ede9fe;color:#7c3aed;}
-  .gate-role-btn .gr-title{font-size:13px;font-weight:600;color:var(--ink);}
-  .gate-role-btn .gr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
-
-  .gate-password-wrap{display:none;text-align:left;}
-  .gate-password-wrap.show{display:block;}
-  .gate-role-row.hide{display:none;}
-  .gate-back{font-size:12px;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-bottom:14px;}
-  .gate-back:hover{color:var(--ink);}
-  .gate-input-wrap{display:flex;gap:8px;}
-  .gate-input-wrap input{flex:1;text-align:center;letter-spacing:1px;}
-  .gate-eye{flex-shrink:0;width:42px;display:flex;align-items:center;justify-content:center;background:var(--white);border:1px solid var(--border-strong);border-radius:var(--radius);cursor:pointer;color:var(--muted);}
-  .gate-eye:hover{color:var(--mid);border-color:var(--mid);}
-  .gate-card button.btn-primary{margin-top:12px;}
-  .gate-error{color:var(--red);font-size:12px;margin-top:10px;display:none;}
-  .gate-error.show{display:block;}
-
-  #app-shell{display:none;}
+}
 </style>
 </head>
 <body>
-
-<div id="gate-screen">
-  <div class="gate-card">
-    <div class="gate-icon"><i class="ti ti-camera"></i></div>
-    <h1>Book Media Equipment</h1>
-    <p>How are you signing in?</p>
-
-    <div class="gate-role-row" id="gate-role-row">
-      <button type="button" class="gate-role-btn gr-student" onclick="chooseGateRole('student')">
-        <span class="gr-icon"><i class="ti ti-school"></i></span>
-        <span><span class="gr-title" style="display:block">Student</span><span class="gr-sub">Book up to 30 days ahead</span></span>
-      </button>
-      <button type="button" class="gate-role-btn gr-teacher" onclick="chooseGateRole('teacher')">
-        <span class="gr-icon"><i class="ti ti-user-star"></i></span>
-        <span><span class="gr-title" style="display:block">Teacher / staff</span><span class="gr-sub">Requires the staff password</span></span>
-      </button>
-    </div>
-
-    <div class="gate-password-wrap" id="gate-password-wrap">
-      <div class="gate-back" onclick="backToGateRoles()"><i class="ti ti-arrow-left"></i> Back</div>
-      <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:6px">Staff password</label>
-      <div class="gate-input-wrap">
-        <input type="password" class="input-field" id="gate-password" placeholder="Password" />
-        <button type="button" class="gate-eye" id="gate-eye" onclick="toggleGatePasswordVisibility()" aria-label="Show password">
-          <svg id="gate-eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        </button>
-      </div>
-      <button class="btn btn-primary" onclick="checkGatePassword()"><i class="ti ti-lock-open"></i> Sign in as teacher</button>
-      <div class="gate-error" id="gate-error">Incorrect password. Try again.</div>
-    </div>
-  </div>
-</div>
 
 <div id="app-shell">
 <div class="wrap">
@@ -193,10 +129,6 @@
 
     <div class="card">
       <h2><span class="step-num">3</span> Your details</h2>
-      <div class="form-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:14px">
-        <span style="font-size:12px;color:var(--mid);display:flex;align-items:center;gap:6px"><i class="ti" id="signed-in-icon" style="font-size:15px"></i> Signed in as <strong id="signed-in-role-label" style="color:var(--ink)">Student</strong></span>
-        <a onclick="signOutOfGate()" style="font-size:11px;color:var(--blue);cursor:pointer">Not you? Switch</a>
-      </div>
       <div class="form-row">
         <label id="name-label">Student name</label>
         <input type="text" class="input-field" id="student-name" placeholder="Your name" />
@@ -227,125 +159,18 @@
 <script>
 /* Paste the SAME Web App URL used in the main admin app here — this page
    talks to the exact same Google Sheet backend. */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzIXLHlToKY-ark30g6A6QUBqDepYMG1UMfpIQmzfQYJSp4JWwpTd4kRniXhkykl_M/exec";
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbymyqArQFrrVtkq0SAcRr71_w6_t-nBG_YIU03fYvEH0DlnMkio-RcJUiR6xtj_-RZE/exec";
 
 var inventory = [], kits = [], categories = [], kitTypes = [], reservations = [];
 var bookType = 'item';
+// This page is student-facing only — there is no teacher/staff sign-in or
+// password gate here. Staff use the admin dashboard (media-inventory.html)
+// directly for check in/out, not this pre-booking form.
 var requesterRole = 'student';
 // Keep this in sync with STUDENT_MAX_ADVANCE_DAYS in Code.gs — it's only
 // used here for a friendly client-side hint; the server enforces the real limit.
 var STUDENT_MAX_ADVANCE_DAYS = 30;
 var availabilityResult = null; // last server/local availability check result
-
-function setRole(role){
-  requesterRole = role;
-  var icon=document.getElementById('signed-in-icon');
-  var roleLabel=document.getElementById('signed-in-role-label');
-  var nameLabel=document.getElementById('name-label');
-  var emailLabel=document.getElementById('email-label');
-  var emailTag=document.getElementById('email-optional-tag');
-  if(role==='teacher'){
-    icon.className='ti ti-user-star';
-    roleLabel.textContent='Teacher / staff';
-    nameLabel.textContent='Staff name';
-    emailTag.textContent='(required for staff)';
-  } else {
-    icon.className='ti ti-school';
-    roleLabel.textContent='Student';
-    nameLabel.textContent='Student name';
-    emailTag.textContent='(optional)';
-  }
-  onRefOrDateChange();
-}
-
-/* ── SIGN-IN GATE ──
-   Students go straight into the booking flow below. Teachers/staff enter
-   the SAME password as the admin dashboard (SITE_PASSWORD in
-   media-inventory.html) and get sent straight to that dashboard instead —
-   they don't see the pre-booking form at all, since staff should be using
-   the real inventory tools (check in/out, add items, etc.), not the
-   student reservation request form.
-
-   Keep GATE_TEACHER_PASSWORD and ADMIN_APP_URL in sync with the admin
-   file whenever you change either. The password is checked here only to
-   decide whether to redirect — book.html itself never gains any admin
-   capability, so getting it wrong just leaves someone on this gate. */
-var GATE_TEACHER_PASSWORD = "Hallow33n";
-var ADMIN_APP_URL = "index";
-
-var EYE_OPEN_SVG = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
-var EYE_OFF_SVG = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a18.6 18.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
-
-function toggleGatePasswordVisibility(){
-  var input=document.getElementById('gate-password');
-  var icon=document.getElementById('gate-eye-icon');
-  var btn=document.getElementById('gate-eye');
-  if(input.type==='password'){
-    input.type='text'; icon.innerHTML=EYE_OFF_SVG; btn.setAttribute('aria-label','Hide password');
-  } else {
-    input.type='password'; icon.innerHTML=EYE_OPEN_SVG; btn.setAttribute('aria-label','Show password');
-  }
-  input.focus();
-}
-
-function chooseGateRole(role){
-  if(role==='student'){
-    enterApp('student');
-    return;
-  }
-  document.getElementById('gate-role-row').classList.add('hide');
-  document.getElementById('gate-password-wrap').classList.add('show');
-  document.getElementById('gate-password').value='';
-  document.getElementById('gate-error').classList.remove('show');
-  setTimeout(function(){ document.getElementById('gate-password').focus(); },10);
-}
-
-function backToGateRoles(){
-  document.getElementById('gate-role-row').classList.remove('hide');
-  document.getElementById('gate-password-wrap').classList.remove('show');
-}
-
-function checkGatePassword(){
-  var input=document.getElementById('gate-password');
-  var error=document.getElementById('gate-error');
-  if(input.value===GATE_TEACHER_PASSWORD){
-    error.classList.remove('show');
-    // Hand the password to the admin page via sessionStorage (cleared the
-    // moment it's read there) so staff don't have to type it a second
-    // time — see the matching snippet added near the top of
-    // media-inventory.html's own lock-screen script.
-    try{ sessionStorage.setItem('mi_gate_bridge', input.value); }catch(e){}
-    window.location.href = ADMIN_APP_URL;
-  } else {
-    error.classList.add('show');
-    input.value='';
-    input.focus();
-  }
-}
-document.addEventListener('DOMContentLoaded',function(){
-  var input=document.getElementById('gate-password');
-  if(input){
-    input.addEventListener('keydown',function(e){ if(e.key==='Enter') checkGatePassword(); });
-    input.addEventListener('input',function(){ document.getElementById('gate-error').classList.remove('show'); });
-  }
-});
-
-function enterApp(role){
-  document.getElementById('gate-screen').style.display='none';
-  document.getElementById('app-shell').style.display='block';
-  setRole(role);
-}
-
-// Lets a student go back to the sign-in gate without losing their place in
-// the equipment/date pickers — only name and email reset. (Teachers never
-// reach this screen — see checkGatePassword above.)
-function signOutOfGate(){
-  document.getElementById('app-shell').style.display='none';
-  document.getElementById('gate-screen').style.display='flex';
-  backToGateRoles();
-  document.getElementById('student-name').value='';
-  document.getElementById('student-email').value='';
-}
 
 function showToast(msg,icon,err){
   var t=document.getElementById('toast');
@@ -459,7 +284,7 @@ function onRefOrDateChange(){
     if(start>maxDate){
       hint.style.display='none';
       box.classList.add('show','status-err');
-      box.innerHTML='<i class="ti ti-alert-triangle"></i><div>Students can only book up to '+STUDENT_MAX_ADVANCE_DAYS+' days ahead. Switch to "Teacher / staff" above if a teacher is submitting this.</div>';
+      box.innerHTML='<i class="ti ti-alert-triangle"></i><div>Students can only book up to '+STUDENT_MAX_ADVANCE_DAYS+' days ahead.</div>';
       submitBtn.disabled=true; submitLabel.textContent='Outside student booking window';
       return;
     }
@@ -574,7 +399,7 @@ function resetForm(){
   document.getElementById('start-date').value='';
   document.getElementById('end-date').value='';
   document.getElementById('cat-select').value='';
-  setRole(requesterRole);
+  onRefOrDateChange();
   renderRefOptions();
   loadAvailability();
 }
