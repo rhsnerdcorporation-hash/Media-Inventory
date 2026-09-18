@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Book Media Equipment</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='9' fill='%230f172a'/><g fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' transform='translate(6,6)'><path d='M5 7h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2'/><path d='M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0'/></g></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --ink:#0f172a;--slate:#1e293b;--mid:#475569;--muted:#94a3b8;
+    --border:#e2e8f0;--border-strong:#cbd5e1;--surface:#f8fafc;--surface2:#f1f5f9;--white:#fff;
+    --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+    --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+    --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
+    --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+    --radius:10px;--radius-lg:14px;
+    --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+    --shadow-md:0 4px 12px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.06);
+    --shadow-lg:0 8px 24px rgba(15,23,42,.10),0 2px 6px rgba(15,23,42,.06);
+  }
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--surface);color:var(--ink);font-size:14px;line-height:1.6;min-height:100vh;}
+  .wrap{max-width:640px;margin:0 auto;padding:28px 20px 60px;}
+  .header{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+  .logo-mark{width:40px;height:40px;background:var(--ink);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .logo-mark i{font-size:22px;color:#fff;}
+  .header h1{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;}
+  .header p{font-size:12px;color:var(--muted);margin-top:1px;}
+
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:20px;margin-bottom:16px;}
+  .card h2{font-size:14px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .card h2 .step-num{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;flex-shrink:0;}
+
+  .type-toggle{display:flex;gap:8px;margin-bottom:14px;}
+  .type-btn{flex:1;padding:9px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--white);color:var(--mid);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s;}
+  .type-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .role-toggle{display:none;}
+
+  .form-row{margin-bottom:14px;}
+  .form-row label{display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px;}
+  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .input-field,select.input-field{
+    height:38px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--radius);
+    font-size:13px;color:var(--ink);background:var(--white);outline:none;width:100%;font-family:inherit;
+    transition:border-color .15s;
+  }
+  .input-field:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+
+  .avail-hint{font-size:12px;color:var(--muted);margin-top:4px;}
+
+  .status-box{border-radius:var(--radius);padding:12px 14px;font-size:13px;display:none;margin-bottom:14px;gap:8px;align-items:flex-start;}
+  .status-box.show{display:flex;}
+  .status-box i{font-size:16px;flex-shrink:0;margin-top:1px;}
+  .status-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+  .status-warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+  .status-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+  .status-box ul{margin:6px 0 0 18px;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border-strong);background:var(--white);color:var(--mid);transition:all .12s;width:100%;}
+  .btn i{font-size:16px;}
+  .btn-primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .btn-primary:hover{background:var(--slate);}
+  .btn-primary:disabled{background:var(--border-strong);border-color:var(--border-strong);color:var(--muted);cursor:not-allowed;}
+
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;border-radius:var(--radius);padding:11px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;z-index:999;box-shadow:var(--shadow-lg);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:90vw;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .empty-note{font-size:12px;color:var(--muted);text-align:center;padding:20px 0;}
+  .footer-note{font-size:11px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;}
+
+  .success-card{display:none;text-align:center;padding:32px 20px;}
+  .success-card.show{display:block;}
+  .success-icon{width:52px;height:52px;border-radius:50%;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:26px;}
+  .success-card h2{font-size:16px;margin-bottom:6px;justify-content:center;}
+  .success-card p{font-size:13px;color:var(--mid);margin-bottom:18px;}
+
+  /* ── SIGN-IN GATE ── */
+  #gate-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .gate-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:32px 28px;width:100%;max-width:360px;text-align:center;}
+  .gate-icon{width:48px;height:48px;background:var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+  .gate-icon i{font-size:24px;color:#fff;}
+  .gate-card h1{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;margin-bottom:4px;}
+  .gate-card p{font-size:12px;color:var(--muted);margin-bottom:20px;}
+  .gate-role-row{display:flex;flex-direction:column;gap:10px;}
+  .gate-role-btn{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--white);cursor:pointer;text-align:left;transition:all .12s;}
+  .gate-role-btn:hover{border-color:var(--ink);background:var(--surface);}
+  .gate-role-btn .gr-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;}
+  .gate-role-btn.gr-student .gr-icon{background:var(--blue-bg);color:var(--blue);}
+  .gate-role-btn.gr-teacher .gr-icon{background:#ede9fe;color:#7c3aed;}
+  .gate-role-btn .gr-title{font-size:13px;font-weight:600;color:var(--ink);}
+  .gate-role-btn .gr-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+
+  .gate-password-wrap{display:none;text-align:left;}
+  .gate-password-wrap.show{display:block;}
+  .gate-role-row.hide{display:none;}
+  .gate-back{font-size:12px;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-bottom:14px;}
+  .gate-back:hover{color:var(--ink);}
+  .gate-input-wrap{display:flex;gap:8px;}
+  .gate-input-wrap input{flex:1;text-align:center;letter-spacing:1px;}
+  .gate-eye{flex-shrink:0;width:42px;display:flex;align-items:center;justify-content:center;background:var(--white);border:1px solid var(--border-strong);border-radius:var(--radius);cursor:pointer;color:var(--muted);}
+  .gate-eye:hover{color:var(--mid);border-color:var(--mid);}
+  .gate-card button.btn-primary{margin-top:12px;}
+  .gate-error{color:var(--red);font-size:12px;margin-top:10px;display:none;}
+  .gate-error.show{display:block;}
+
+  #app-shell{display:none;}
+</style>
+</head>
+<body>
+
+<div id="gate-screen">
+  <div class="gate-card">
+    <div class="gate-icon"><i class="ti ti-camera"></i></div>
+    <h1>Book Media Equipment</h1>
+    <p>How are you signing in?</p>
+
+    <div class="gate-role-row" id="gate-role-row">
+      <button type="button" class="gate-role-btn gr-student" onclick="chooseGateRole('student')">
+        <span class="gr-icon"><i class="ti ti-school"></i></span>
+        <span><span class="gr-title" style="display:block">Student</span><span class="gr-sub">Book up to 30 days ahead</span></span>
+      </button>
+      <button type="button" class="gate-role-btn gr-teacher" onclick="chooseGateRole('teacher')">
+        <span class="gr-icon"><i class="ti ti-user-star"></i></span>
+        <span><span class="gr-title" style="display:block">Teacher / staff</span><span class="gr-sub">Requires the staff password</span></span>
+      </button>
+    </div>
+
+    <div class="gate-password-wrap" id="gate-password-wrap">
+      <div class="gate-back" onclick="backToGateRoles()"><i class="ti ti-arrow-left"></i> Back</div>
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:6px">Staff password</label>
+      <div class="gate-input-wrap">
+        <input type="password" class="input-field" id="gate-password" placeholder="Password" />
+        <button type="button" class="gate-eye" id="gate-eye" onclick="toggleGatePasswordVisibility()" aria-label="Show password">
+          <svg id="gate-eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+      <button class="btn btn-primary" onclick="checkGatePassword()"><i class="ti ti-lock-open"></i> Sign in as teacher</button>
+      <div class="gate-error" id="gate-error">Incorrect password. Try again.</div>
+    </div>
+  </div>
+</div>
+
+<div id="app-shell">
+<div class="wrap">
+  <div class="header">
+    <div class="logo-mark"><i class="ti ti-camera"></i></div>
+    <div>
+      <h1>Book Media Equipment</h1>
+      <p>Request equipment for a future date — no login required</p>
+    </div>
+  </div>
+
+  <div id="form-flow">
+    <div class="card">
+      <h2><span class="step-num">1</span> What do you need?</h2>
+      <div class="type-toggle">
+        <button type="button" class="type-btn active" id="type-btn-item" onclick="setBookType('item')"><i class="ti ti-camera"></i> Single item</button>
+        <button type="button" class="type-btn" id="type-btn-kit" onclick="setBookType('kit')"><i class="ti ti-stack-2"></i> Kit</button>
+      </div>
+      <div class="form-row">
+        <label id="cat-label-item">Category</label>
+        <select class="input-field" id="cat-select" onchange="renderRefOptions()"></select>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label id="ref-label">Item</label>
+        <select class="input-field" id="ref-select" onchange="onRefOrDateChange()"></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step-num">2</span> When do you need it?</h2>
+      <div class="form-row-2" style="margin-bottom:6px">
+        <div>
+          <label>From</label>
+          <input type="date" class="input-field" id="start-date" onchange="onRefOrDateChange()" />
+        </div>
+        <div>
+          <label>Until</label>
+          <input type="date" class="input-field" id="end-date" onchange="onRefOrDateChange()" />
+        </div>
+      </div>
+      <div class="avail-hint" id="avail-hint">Choose an item and dates to check availability.</div>
+      <div class="status-box" id="avail-status"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step-num">3</span> Your details</h2>
+      <div class="form-row" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:14px">
+        <span style="font-size:12px;color:var(--mid);display:flex;align-items:center;gap:6px"><i class="ti" id="signed-in-icon" style="font-size:15px"></i> Signed in as <strong id="signed-in-role-label" style="color:var(--ink)">Student</strong></span>
+        <a onclick="signOutOfGate()" style="font-size:11px;color:var(--blue);cursor:pointer">Not you? Switch</a>
+      </div>
+      <div class="form-row">
+        <label id="name-label">Student name</label>
+        <input type="text" class="input-field" id="student-name" placeholder="Your name" />
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label id="email-label">Email <span id="email-optional-tag" style="color:var(--muted);font-weight:400">(optional)</span></label>
+        <input type="email" class="input-field" id="student-email" placeholder="you@school.example" />
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="submit-btn" onclick="submitReservation()" disabled>
+      <i class="ti ti-calendar-plus"></i> <span id="submit-btn-label">Choose an item and dates first</span>
+    </button>
+    <div class="footer-note">This request goes straight to the equipment log. Staff can see and cancel it from the admin dashboard.</div>
+  </div>
+
+  <div class="card success-card" id="success-card">
+    <div class="success-icon"><i class="ti ti-check"></i></div>
+    <h2>Request submitted</h2>
+    <p id="success-detail">Your reservation has been recorded.</p>
+    <button class="btn" onclick="resetForm()"><i class="ti ti-plus"></i> Book something else</button>
+  </div>
+</div>
+</div>
+
+<div id="toast"><i class="ti ti-check" id="toast-icon"></i><span id="toast-msg"></span></div>
+
+<script>
+/* Paste the SAME Web App URL used in the main admin app here — this page
+   talks to the exact same Google Sheet backend. */
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzIXLHlToKY-ark30g6A6QUBqDepYMG1UMfpIQmzfQYJSp4JWwpTd4kRniXhkykl_M/exec";
+
+var inventory = [], kits = [], categories = [], kitTypes = [], reservations = [];
+var bookType = 'item';
+var requesterRole = 'student';
+// Keep this in sync with STUDENT_MAX_ADVANCE_DAYS in Code.gs — it's only
+// used here for a friendly client-side hint; the server enforces the real limit.
+var STUDENT_MAX_ADVANCE_DAYS = 30;
+var availabilityResult = null; // last server/local availability check result
+
+function setRole(role){
+  requesterRole = role;
+  var icon=document.getElementById('signed-in-icon');
+  var roleLabel=document.getElementById('signed-in-role-label');
+  var nameLabel=document.getElementById('name-label');
+  var emailLabel=document.getElementById('email-label');
+  var emailTag=document.getElementById('email-optional-tag');
+  if(role==='teacher'){
+    icon.className='ti ti-user-star';
+    roleLabel.textContent='Teacher / staff';
+    nameLabel.textContent='Staff name';
+    emailTag.textContent='(required for staff)';
+  } else {
+    icon.className='ti ti-school';
+    roleLabel.textContent='Student';
+    nameLabel.textContent='Student name';
+    emailTag.textContent='(optional)';
+  }
+  onRefOrDateChange();
+}
+
+/* ── SIGN-IN GATE ──
+   Students go straight into the booking flow below. Teachers/staff enter
+   the SAME password as the admin dashboard (SITE_PASSWORD in
+   media-inventory.html) and get sent straight to that dashboard instead —
+   they don't see the pre-booking form at all, since staff should be using
+   the real inventory tools (check in/out, add items, etc.), not the
+   student reservation request form.
+
+   Keep GATE_TEACHER_PASSWORD and ADMIN_APP_URL in sync with the admin
+   file whenever you change either. The password is checked here only to
+   decide whether to redirect — book.html itself never gains any admin
+   capability, so getting it wrong just leaves someone on this gate. */
+var GATE_TEACHER_PASSWORD = "Hallow33n";
+var ADMIN_APP_URL = "media-inventory.html";
+
+var EYE_OPEN_SVG = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+var EYE_OFF_SVG = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 8 11 8a18.6 18.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+
+function toggleGatePasswordVisibility(){
+  var input=document.getElementById('gate-password');
+  var icon=document.getElementById('gate-eye-icon');
+  var btn=document.getElementById('gate-eye');
+  if(input.type==='password'){
+    input.type='text'; icon.innerHTML=EYE_OFF_SVG; btn.setAttribute('aria-label','Hide password');
+  } else {
+    input.type='password'; icon.innerHTML=EYE_OPEN_SVG; btn.setAttribute('aria-label','Show password');
+  }
+  input.focus();
+}
+
+function chooseGateRole(role){
+  if(role==='student'){
+    enterApp('student');
+    return;
+  }
+  document.getElementById('gate-role-row').classList.add('hide');
+  document.getElementById('gate-password-wrap').classList.add('show');
+  document.getElementById('gate-password').value='';
+  document.getElementById('gate-error').classList.remove('show');
+  setTimeout(function(){ document.getElementById('gate-password').focus(); },10);
+}
+
+function backToGateRoles(){
+  document.getElementById('gate-role-row').classList.remove('hide');
+  document.getElementById('gate-password-wrap').classList.remove('show');
+}
+
+function checkGatePassword(){
+  var input=document.getElementById('gate-password');
+  var error=document.getElementById('gate-error');
+  if(input.value===GATE_TEACHER_PASSWORD){
+    error.classList.remove('show');
+    // Hand the password to the admin page via sessionStorage (cleared the
+    // moment it's read there) so staff don't have to type it a second
+    // time — see the matching snippet added near the top of
+    // media-inventory.html's own lock-screen script.
+    try{ sessionStorage.setItem('mi_gate_bridge', input.value); }catch(e){}
+    window.location.href = ADMIN_APP_URL;
+  } else {
+    error.classList.add('show');
+    input.value='';
+    input.focus();
+  }
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var input=document.getElementById('gate-password');
+  if(input){
+    input.addEventListener('keydown',function(e){ if(e.key==='Enter') checkGatePassword(); });
+    input.addEventListener('input',function(){ document.getElementById('gate-error').classList.remove('show'); });
+  }
+});
+
+function enterApp(role){
+  document.getElementById('gate-screen').style.display='none';
+  document.getElementById('app-shell').style.display='block';
+  setRole(role);
+}
+
+// Lets a student go back to the sign-in gate without losing their place in
+// the equipment/date pickers — only name and email reset. (Teachers never
+// reach this screen — see checkGatePassword above.)
+function signOutOfGate(){
+  document.getElementById('app-shell').style.display='none';
+  document.getElementById('gate-screen').style.display='flex';
+  backToGateRoles();
+  document.getElementById('student-name').value='';
+  document.getElementById('student-email').value='';
+}
+
+function showToast(msg,icon,err){
+  var t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-icon').className='ti '+(icon||'ti-check');
+  t.style.background=err?'#b91c1c':'var(--ink)';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(function(){t.classList.remove('show');},3400);
+}
+
+function setBookType(t){
+  bookType=t;
+  document.getElementById('type-btn-item').classList.toggle('active',t==='item');
+  document.getElementById('type-btn-kit').classList.toggle('active',t==='kit');
+  document.getElementById('cat-label-item').textContent = t==='item' ? 'Category' : 'Kit type';
+  document.getElementById('ref-label').textContent = t==='item' ? 'Item' : 'Kit';
+  renderCatOptions();
+  renderRefOptions();
+}
+
+function renderCatOptions(){
+  var sel=document.getElementById('cat-select');
+  var list = bookType==='item' ? categories : kitTypes;
+  var allLabel = bookType==='item' ? 'All categories' : 'All kit types';
+  sel.innerHTML='<option value="">'+allLabel+'</option>'+list.map(function(c){return '<option value="'+c.key+'">'+c.label+'</option>';}).join('');
+}
+
+function itemAvailableNow(item){ return item.status==='in'; }
+
+function renderRefOptions(){
+  var catFilter=document.getElementById('cat-select').value;
+  var sel=document.getElementById('ref-select');
+  if(bookType==='item'){
+    var list=inventory.filter(function(x){return !catFilter || x.category===catFilter;});
+    if(!list.length){ sel.innerHTML='<option value="">No items in this category</option>'; }
+    else {
+      sel.innerHTML='<option value="">Choose an item…</option>'+list.map(function(x){
+        var flag = itemAvailableNow(x) ? '' : ' (currently checked out)';
+        return '<option value="'+x.id+'">'+x.name+flag+'</option>';
+      }).join('');
+    }
+  } else {
+    var klist=kits.filter(function(k){return !catFilter || k.type===catFilter;});
+    if(!klist.length){ sel.innerHTML='<option value="">No kits in this type</option>'; }
+    else {
+      sel.innerHTML='<option value="">Choose a kit…</option>'+klist.map(function(k){
+        return '<option value="'+k.id+'">'+k.name+' ('+k.itemIds.length+' items)</option>';
+      }).join('');
+    }
+  }
+  onRefOrDateChange();
+}
+
+function itemIdsForSelection(){
+  var refId=document.getElementById('ref-select').value;
+  if(!refId) return {refId:null,refName:'',itemIds:[]};
+  if(bookType==='item'){
+    var item=inventory.find(function(x){return x.id===refId;});
+    return {refId:refId,refName:item?item.name:refId,itemIds:item?[item.id]:[]};
+  }
+  var kit=kits.find(function(k){return k.id===refId;});
+  return {refId:refId,refName:kit?kit.name:refId,itemIds:kit?kit.itemIds:[]};
+}
+
+// Client-side availability preview against the reservations we already
+// fetched. This is UX only — the server re-checks for real when the
+// request is actually submitted, so a stale local copy can't let a
+// double-booking through.
+function onRefOrDateChange(){
+  var sel=itemIdsForSelection();
+  var startVal=document.getElementById('start-date').value;
+  var endVal=document.getElementById('end-date').value;
+  var hint=document.getElementById('avail-hint');
+  var box=document.getElementById('avail-status');
+  var submitBtn=document.getElementById('submit-btn');
+  var submitLabel=document.getElementById('submit-btn-label');
+  box.className='status-box';
+  availabilityResult=null;
+
+  if(!sel.refId){
+    hint.style.display='';
+    hint.textContent='Choose an item and dates to check availability.';
+    submitBtn.disabled=true; submitLabel.textContent='Choose an item and dates first';
+    return;
+  }
+  if(!startVal||!endVal){
+    hint.style.display='';
+    hint.textContent='Pick a start and end date to check availability.';
+    submitBtn.disabled=true; submitLabel.textContent='Choose dates';
+    return;
+  }
+  var start=new Date(startVal), end=new Date(endVal+'T23:59:59');
+  var today=new Date(); today.setHours(0,0,0,0);
+  if(start<today){
+    hint.style.display='none';
+    box.classList.add('show','status-err');
+    box.innerHTML='<i class="ti ti-alert-triangle"></i><div>The start date can\'t be in the past.</div>';
+    submitBtn.disabled=true; submitLabel.textContent='Fix the dates';
+    return;
+  }
+  if(end<=start){
+    hint.style.display='none';
+    box.classList.add('show','status-err');
+    box.innerHTML='<i class="ti ti-alert-triangle"></i><div>The end date must be after the start date.</div>';
+    submitBtn.disabled=true; submitLabel.textContent='Fix the dates';
+    return;
+  }
+  if(requesterRole==='student' && STUDENT_MAX_ADVANCE_DAYS>0){
+    var maxDate=new Date(Date.now()+STUDENT_MAX_ADVANCE_DAYS*24*3600000);
+    if(start>maxDate){
+      hint.style.display='none';
+      box.classList.add('show','status-err');
+      box.innerHTML='<i class="ti ti-alert-triangle"></i><div>Students can only book up to '+STUDENT_MAX_ADVANCE_DAYS+' days ahead. Switch to "Teacher / staff" above if a teacher is submitting this.</div>';
+      submitBtn.disabled=true; submitLabel.textContent='Outside student booking window';
+      return;
+    }
+  }
+
+  hint.style.display='none';
+  var conflicts=[];
+  reservations.forEach(function(r){
+    var shared=r.itemIds.filter(function(id){return sel.itemIds.indexOf(id)>-1;});
+    if(!shared.length)return;
+    var rStart=new Date(r.startDate), rEnd=new Date(r.endDate);
+    if(start<rEnd && rStart<end){
+      conflicts.push(r);
+    }
+  });
+
+  if(conflicts.length){
+    box.classList.add('show','status-warn');
+    box.innerHTML='<i class="ti ti-alert-triangle"></i><div>Already reserved for part of this date range. Try different dates or another item.'+
+      '<ul>'+conflicts.slice(0,3).map(function(c){
+        return '<li>'+new Date(c.startDate).toLocaleDateString()+' – '+new Date(c.endDate).toLocaleDateString()+'</li>';
+      }).join('')+'</ul></div>';
+    submitBtn.disabled=true; submitLabel.textContent='Not available for these dates';
+    availabilityResult={available:false};
+  } else {
+    box.classList.add('show','status-ok');
+    var currentlyOut = bookType==='item' && sel.itemIds.length===1 && inventory.find(function(x){return x.id===sel.itemIds[0];}) && !itemAvailableNow(inventory.find(function(x){return x.id===sel.itemIds[0];}));
+    box.innerHTML='<i class="ti ti-check"></i><div>Available for these dates.'+
+      (currentlyOut?' Note: this item is currently checked out to someone else right now, but nothing else has reserved it for your dates.':'')+
+      '</div>';
+    submitBtn.disabled=false; submitLabel.textContent='Request reservation';
+    availabilityResult={available:true};
+  }
+}
+
+async function loadAvailability(){
+  try{
+    var res=await fetch(SHEETS_API_URL+'?action=availability');
+    var data=await res.json();
+    if(data.error) throw new Error(data.error);
+    inventory=data.items||[];
+    kits=(data.kits||[]).map(function(k){ if(k.type===undefined)k.type=''; return k; });
+    categories=data.categories||[];
+    kitTypes=data.kitTypes||[];
+    reservations=data.reservations||[];
+    renderCatOptions();
+    renderRefOptions();
+  }catch(err){
+    document.getElementById('avail-hint').textContent='Could not load equipment data — check your internet connection and try refreshing.';
+    showToast('Could not load equipment list','ti-alert-triangle',true);
+  }
+}
+
+async function submitReservation(){
+  var sel=itemIdsForSelection();
+  var name=document.getElementById('student-name').value.trim();
+  var email=document.getElementById('student-email').value.trim();
+  var startVal=document.getElementById('start-date').value;
+  var endVal=document.getElementById('end-date').value;
+
+  if(!sel.refId){showToast('Choose an item or kit first','ti-alert-triangle',true);return;}
+  if(!name){showToast('Enter your name','ti-alert-triangle',true);return;}
+  if(requesterRole==='teacher' && !email){showToast('Staff email is required for teacher bookings','ti-alert-triangle',true);return;}
+  if(!availabilityResult||!availabilityResult.available){showToast('Those dates are not available','ti-alert-triangle',true);return;}
+
+  var submitBtn=document.getElementById('submit-btn');
+  var submitLabel=document.getElementById('submit-btn-label');
+  submitBtn.disabled=true;
+  var prevLabel=submitLabel.textContent;
+  submitLabel.textContent='Submitting…';
+
+  var payload={
+    type:bookType, refId:sel.refId,
+    requesterType:requesterRole,
+    studentName:name, studentEmail:email,
+    startDate:new Date(startVal).toISOString(),
+    endDate:new Date(endVal+'T23:59:59').toISOString()
+  };
+
+  try{
+    var res=await fetch(SHEETS_API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'create_reservation',reservation:payload})
+    });
+    var data=await res.json();
+    if(data.ok){
+      document.getElementById('form-flow').style.display='none';
+      document.getElementById('success-card').classList.add('show');
+      document.getElementById('success-detail').textContent=
+        sel.refName+' reserved from '+new Date(startVal).toLocaleDateString()+' to '+new Date(endVal).toLocaleDateString()+'.';
+      showToast('Reservation submitted','ti-check',false);
+    } else if(data.conflicts && data.conflicts.length){
+      showToast('Someone else just booked this for those dates — refreshing availability','ti-alert-triangle',true);
+      await loadAvailability();
+      onRefOrDateChange();
+    } else {
+      showToast(data.error||'Could not submit the reservation','ti-alert-triangle',true);
+    }
+  }catch(err){
+    showToast('Could not reach the server. Check your connection and try again.','ti-alert-triangle',true);
+  }
+  submitBtn.disabled=false;
+  submitLabel.textContent=prevLabel;
+}
+
+function resetForm(){
+  document.getElementById('form-flow').style.display='';
+  document.getElementById('success-card').classList.remove('show');
+  document.getElementById('student-name').value='';
+  document.getElementById('student-email').value='';
+  document.getElementById('start-date').value='';
+  document.getElementById('end-date').value='';
+  document.getElementById('cat-select').value='';
+  setRole(requesterRole);
+  renderRefOptions();
+  loadAvailability();
+}
+
+(function init(){
+  var today=new Date().toISOString().slice(0,10);
+  document.getElementById('start-date').setAttribute('min',today);
+  document.getElementById('end-date').setAttribute('min',today);
+  loadAvailability();
+})();
+</script>
+</body>
+</html>
