@@ -14,13 +14,15 @@
   :root{
     --ink:#0f172a;--slate:#1e293b;--mid:#475569;--muted:#94a3b8;
     --border:#e2e8f0;--border-strong:#cbd5e1;--surface:#f8fafc;--surface2:#f1f5f9;--white:#fff;
-    --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+    --blue:#2563eb;--blue-bg:#eff6ff;
     --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
     --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
     --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+    /* calendar colours: reserved = violet, currently out = orange */
+    --resv:#7c3aed;--resv-bg:#ede9fe;
+    --out:#ea580c;--out-bg:#ffedd5;
     --radius:10px;--radius-lg:14px;
     --shadow-sm:0 1px 2px rgba(15,23,42,.06);
-    --shadow-md:0 4px 12px rgba(15,23,42,.08),0 1px 3px rgba(15,23,42,.06);
     --shadow-lg:0 8px 24px rgba(15,23,42,.10),0 2px 6px rgba(15,23,42,.06);
   }
   body{font-family:'Inter',system-ui,sans-serif;background:var(--surface);color:var(--ink);font-size:14px;line-height:1.6;min-height:100vh;}
@@ -38,39 +40,112 @@
   .type-toggle{display:flex;gap:8px;margin-bottom:14px;}
   .type-btn{flex:1;padding:9px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--white);color:var(--mid);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s;}
   .type-btn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
-
-  .role-toggle{display:none;}
+  .card.locked{opacity:.55;}
 
   .form-row{margin-bottom:14px;}
   .form-row label{display:block;font-size:12px;font-weight:500;color:var(--mid);margin-bottom:5px;}
-  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-  .input-field,select.input-field{
-    height:38px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--radius);
-    font-size:13px;color:var(--ink);background:var(--white);outline:none;width:100%;font-family:inherit;
-    transition:border-color .15s;
-  }
+  .input-field,select.input-field{height:38px;padding:0 12px;border:1px solid var(--border-strong);border-radius:var(--radius);font-size:13px;color:var(--ink);background:var(--white);outline:none;width:100%;font-family:inherit;transition:border-color .15s;}
   .input-field:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+  select.input-field:disabled{background:var(--surface2);color:var(--muted);cursor:not-allowed;}
+
+  /* ── Calendar ── */
+  .pick-bar{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px;}
+  .pick-bar>i{color:var(--muted);}
+  .pick{border:1px solid var(--border-strong);border-radius:var(--radius);padding:7px 12px;background:var(--white);}
+  .pick small{display:block;font-size:11px;color:var(--muted);font-weight:500;}
+  .pick b{font-size:13px;font-weight:600;}
+  .pick{cursor:pointer;}
+  .pick:hover{border-color:var(--mid);}
+  .pick.empty b{color:var(--muted);font-weight:500;}
+  .pick.active{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+  .time-in{height:32px;margin-top:5px;padding:0 8px;}
+  .mode-tag{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:8px 12px;border-radius:var(--radius);margin-bottom:10px;border:1px solid transparent;}
+  .mode-tag::before{content:'';width:10px;height:10px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .mode-tag.start{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+  .mode-tag.end{background:var(--blue-bg);color:var(--blue);border-color:#bfdbfe;}
+  .mode-tag.done{background:var(--surface2);color:var(--mid);border-color:var(--border);}
+  .mode-tag.start::before,.mode-tag.end::before{animation:pulse 1.3s ease-in-out infinite;}
+  @keyframes pulse{50%{opacity:.25;}}
+  @media (prefers-reduced-motion:reduce){.mode-tag::before{animation:none!important;}}
+  #pick-from.active{border-color:var(--green);background:var(--green-bg);box-shadow:0 0 0 3px rgba(22,163,74,.18);}
+  #pick-to.active{border-color:var(--blue);background:var(--blue-bg);box-shadow:0 0 0 3px rgba(37,99,235,.18);}
+  .cal-grid{border:2px solid transparent;border-radius:12px;padding:4px;transition:border-color .15s;}
+  .cal-grid.mode-start{border-color:var(--green);}
+  .cal-grid.mode-end{border-color:var(--blue);}
+  .cal-step{background:var(--blue-bg);color:#1d4ed8;border-radius:var(--radius);padding:9px 12px;font-size:13px;font-weight:500;margin-bottom:10px;}
+  .cal-day.preview:not(.sel){box-shadow:inset 0 0 0 2px #93c5fd;}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cal-head strong{font-family:'Space Grotesk',sans-serif;font-size:15px;}
+  .cal-nav{width:32px;height:32px;border-radius:8px;border:1px solid var(--border-strong);background:var(--white);cursor:pointer;color:var(--mid);display:flex;align-items:center;justify-content:center;}
+  .cal-nav:disabled{opacity:.35;cursor:not-allowed;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .cal-dow{font-size:11px;font-weight:600;color:var(--muted);text-align:center;padding-bottom:4px;}
+  .cal-day{position:relative;aspect-ratio:1/1;min-height:42px;border:1px solid var(--border);border-radius:8px;background:var(--white);font:500 13px 'Inter',sans-serif;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:5px;overflow:hidden;}
+  .cal-day.blank{border:none;background:none;cursor:default;}
+  .cal-day.disabled{background:var(--surface2);color:#c3ccd8;cursor:not-allowed;}
+  .cal-day.today{border-color:var(--ink);font-weight:700;}
+  .cal-day.has-out{background:var(--out-bg);border-color:#fdba74;}
+  .cal-day.has-resv{background:var(--resv-bg);border-color:#c4b5fd;}
+  .cal-day.has-out.has-resv{background:linear-gradient(135deg,var(--out-bg) 50%,var(--resv-bg) 50%);border-color:#c4b5fd;}
+  .cal-day.in-range{box-shadow:inset 0 0 0 2px #60a5fa;}
+  .cal-day.in-range:not(.has-out):not(.has-resv){background:var(--blue-bg);}
+  .cal-day.sel,.cal-day.sel.has-out,.cal-day.sel.has-resv,.cal-day.sel.has-out.has-resv{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:none;}
+  .cal-day:focus-visible{outline:2px solid var(--blue);outline-offset:1px;}
+  .chips{position:absolute;left:2px;right:2px;bottom:3px;display:flex;gap:2px;justify-content:center;}
+  .chip{min-width:16px;height:16px;border-radius:8px;font-size:10px;font-weight:700;line-height:16px;color:#fff;padding:0 4px;text-align:center;}
+  .chip.o{background:var(--out);}
+  .chip.r{background:var(--resv);}
+  .cal-legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:12px;color:var(--mid);}
+  .cal-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .cal-legend i{width:12px;height:12px;border-radius:3px;display:inline-block;font-style:normal;}
+  .overview{margin-top:12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);}
+  .overview summary{cursor:pointer;padding:9px 12px;font-size:12px;font-weight:600;color:var(--mid);}
+  .ov-body{padding:0 12px 10px;max-height:260px;overflow-y:auto;}
+  .ov-head{font-size:12px;font-weight:600;margin:8px 0 4px;display:flex;align-items:center;gap:6px;}
+  .ov-head i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+  .ov-row{font-size:12px;padding:6px 0;border-top:1px solid var(--border);}
+  .ov-row b{font-weight:600;}
+  .ov-row span{display:block;color:var(--mid);}
+  .ov-empty{font-size:12px;color:var(--muted);padding:2px 0 6px;}
+  .ref-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;}
+  .ref-group{font-size:12px;font-weight:600;color:var(--mid);margin:8px 0 0;}
+  .ref-group:first-child{margin-top:0;}
+  .ref{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;text-align:left;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--white);cursor:pointer;font:inherit;color:var(--ink);width:100%;}
+  .ref:hover{border-color:var(--mid);}
+  .ref .nm{font-weight:600;font-size:13px;display:block;}
+  .ref .sub{font-size:12px;color:var(--mid);display:block;}
+  .ref.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink);}
+  .ref.off{background:var(--surface2);border-style:dashed;cursor:not-allowed;}
+  .ref.off:hover{border-color:var(--border-strong);}
+  .ref.off .nm{color:var(--muted);font-weight:500;}
+  .ref .why{display:block;font-size:12px;margin-top:2px;}
+  .why.o{color:var(--out);} .why.r{color:var(--resv);}
+  .badge{flex-shrink:0;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+  .badge.ok{background:var(--green-bg);color:var(--green);}
+  .badge.o{background:var(--out-bg);color:var(--out);}
+  .badge.r{background:var(--resv-bg);color:var(--resv);}
+  .day-info{margin-top:10px;font-size:12px;color:var(--mid);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;display:none;}
+  .day-info.show{display:block;}
+  .day-info b{font-weight:600;color:var(--ink);}
+  .day-info .tag{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;}
+  .range-summary{margin-top:12px;font-size:13px;font-weight:500;}
 
   .avail-hint{font-size:12px;color:var(--muted);margin-top:4px;}
-
-  .status-box{border-radius:var(--radius);padding:12px 14px;font-size:13px;display:none;margin-bottom:14px;gap:8px;align-items:flex-start;}
+  .status-box{border-radius:var(--radius);padding:12px 14px;font-size:13px;display:none;margin-top:12px;gap:8px;align-items:flex-start;}
   .status-box.show{display:flex;}
   .status-box i{font-size:16px;flex-shrink:0;margin-top:1px;}
   .status-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
-  .status-warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
   .status-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
-  .status-box ul{margin:6px 0 0 18px;}
 
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border-strong);background:var(--white);color:var(--mid);transition:all .12s;width:100%;}
   .btn i{font-size:16px;}
   .btn-primary{background:var(--ink);color:#fff;border-color:var(--ink);}
   .btn-primary:hover{background:var(--slate);}
   .btn-primary:disabled{background:var(--border-strong);border-color:var(--border-strong);color:var(--muted);cursor:not-allowed;}
+  .btn-link{width:auto;border:none;background:none;padding:0;color:var(--blue);font-size:12px;cursor:pointer;font-weight:500;}
 
   #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:#fff;border-radius:var(--radius);padding:11px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;z-index:999;box-shadow:var(--shadow-lg);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:90vw;}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-  .empty-note{font-size:12px;color:var(--muted);text-align:center;padding:20px 0;}
   .footer-note{font-size:11px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;}
 
   .success-card{display:none;text-align:center;padding:32px 20px;}
@@ -78,13 +153,9 @@
   .success-icon{width:52px;height:52px;border-radius:50%;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:26px;}
   .success-card h2{font-size:16px;margin-bottom:6px;justify-content:center;}
   .success-card p{font-size:13px;color:var(--mid);margin-bottom:18px;}
-
-}
 </style>
 </head>
 <body>
-
-<div id="app-shell">
 <div class="wrap">
   <div class="header">
     <div class="logo-mark"><i class="ti ti-camera"></i></div>
@@ -95,8 +166,41 @@
   </div>
 
   <div id="form-flow">
+    <!-- STEP 1: calendar -->
     <div class="card">
-      <h2><span class="step-num">1</span> What do you need?</h2>
+      <h2><span class="step-num">1</span> When do you need it?</h2>
+      <div class="mode-tag start" id="mode-tag"></div>
+      <div class="pick-bar">
+        <div class="pick" id="pick-from"><small>From</small><b id="pick-from-val"></b><input type="time" class="input-field time-in" id="start-time" value="09:00" step="900" aria-label="Start time" /></div>
+        <i class="ti ti-arrow-right"></i>
+        <div class="pick" id="pick-to"><small>Until</small><b id="pick-to-val"></b><input type="time" class="input-field time-in" id="end-time" value="17:00" step="900" aria-label="Return time" /></div>
+      </div>
+      <div class="cal-step" id="cal-hint"></div>
+      <button type="button" class="btn-link" id="one-day" style="display:none;margin-bottom:10px">Just this one day</button>
+      <div class="cal-head">
+        <button type="button" class="cal-nav" id="cal-prev" aria-label="Previous month"><i class="ti ti-chevron-left"></i></button>
+        <strong id="cal-title"></strong>
+        <button type="button" class="cal-nav" id="cal-next" aria-label="Next month"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <span><i style="background:var(--resv)"></i>Reserved (number = items)</span>
+        <span><i style="background:var(--out)"></i>Currently out (number = items)</span>
+        <span><i style="background:var(--ink)"></i>Your dates</span>
+      </div>
+      <details class="overview" id="overview">
+        <summary>See everything that's out or reserved</summary>
+        <div class="ov-body" id="overview-body"></div>
+      </details>
+      <div class="day-info" id="day-info"></div>
+      <div class="range-summary" id="range-summary"></div>
+      <div id="range-err" class="status-box status-err"></div>
+      <button type="button" class="btn-link" id="clear-dates" style="display:none;margin-top:6px">Clear dates</button>
+    </div>
+
+    <!-- STEP 2: item / kit -->
+    <div class="card locked" id="item-card">
+      <h2><span class="step-num">2</span> What do you need?</h2>
       <div class="type-toggle">
         <button type="button" class="type-btn active" id="type-btn-item" onclick="setBookType('item')"><i class="ti ti-camera"></i> Single item</button>
         <button type="button" class="type-btn" id="type-btn-kit" onclick="setBookType('kit')"><i class="ti ti-stack-2"></i> Kit</button>
@@ -107,40 +211,27 @@
       </div>
       <div class="form-row" style="margin-bottom:0">
         <label id="ref-label">Item</label>
-        <select class="input-field" id="ref-select" onchange="onRefOrDateChange()"></select>
+        <div class="ref-list" id="ref-list"></div>
       </div>
-    </div>
-
-    <div class="card">
-      <h2><span class="step-num">2</span> When do you need it?</h2>
-      <div class="form-row-2" style="margin-bottom:6px">
-        <div>
-          <label>From</label>
-          <input type="date" class="input-field" id="start-date" onchange="onRefOrDateChange()" />
-        </div>
-        <div>
-          <label>Until</label>
-          <input type="date" class="input-field" id="end-date" onchange="onRefOrDateChange()" />
-        </div>
-      </div>
-      <div class="avail-hint" id="avail-hint">Choose an item and dates to check availability.</div>
+      <div class="avail-hint" id="avail-hint">Pick your dates first. Anything out or reserved on those dates will be greyed out.</div>
       <div class="status-box" id="avail-status"></div>
     </div>
 
+    <!-- STEP 3: details -->
     <div class="card">
       <h2><span class="step-num">3</span> Your details</h2>
       <div class="form-row">
-        <label id="name-label">Student name</label>
+        <label>Student name</label>
         <input type="text" class="input-field" id="student-name" placeholder="Your name" />
       </div>
       <div class="form-row" style="margin-bottom:0">
-        <label id="email-label">Email <span id="email-optional-tag" style="color:var(--muted);font-weight:400">(optional)</span></label>
+        <label>Email <span style="color:var(--muted);font-weight:400">(optional)</span></label>
         <input type="email" class="input-field" id="student-email" placeholder="you@school.example" />
       </div>
     </div>
 
     <button class="btn btn-primary" id="submit-btn" onclick="submitReservation()" disabled>
-      <i class="ti ti-calendar-plus"></i> <span id="submit-btn-label">Choose an item and dates first</span>
+      <i class="ti ti-calendar-plus"></i> <span id="submit-btn-label">Choose dates first</span>
     </button>
     <div class="footer-note">This request goes straight to the equipment log. Staff can see and cancel it from the admin dashboard.</div>
   </div>
@@ -152,25 +243,29 @@
     <button class="btn" onclick="resetForm()"><i class="ti ti-plus"></i> Book something else</button>
   </div>
 </div>
-</div>
 
 <div id="toast"><i class="ti ti-check" id="toast-icon"></i><span id="toast-msg"></span></div>
 
 <script>
-/* Paste the SAME Web App URL used in the main admin app here — this page
-   talks to the exact same Google Sheet backend. */
-const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbw356JbNftzbaF8_5Y0VldSO0J8fB1URwYtMNuuAU-sDPWTUGCGmbRiFCJPdK5b1_sR/exec";
+/* Same Web App URL as the admin app — talks to the same Google Sheet backend. */
+const SHEETS_API_URL = "https://script.google.com/macros/s/AKfycbzA93Ki__OCViNK84qGEDShAsKVjxveumx8V43rCzylq56tS_714QWZxQoDTmC6Lgx7/exec";
 
-var inventory = [], kits = [], categories = [], kitTypes = [], reservations = [];
-var bookType = 'item';
-// This page is student-facing only — there is no teacher/staff sign-in or
-// password gate here. Staff use the admin dashboard (media-inventory.html)
-// directly for check in/out, not this pre-booking form.
-var requesterRole = 'student';
-// Keep this in sync with STUDENT_MAX_ADVANCE_DAYS in Code.gs — it's only
-// used here for a friendly client-side hint; the server enforces the real limit.
-var STUDENT_MAX_ADVANCE_DAYS = 30;
-var availabilityResult = null; // last server/local availability check result
+var inventory=[], kits=[], categories=[], kitTypes=[], reservations=[], bookings=[];
+var bookType='item';
+var requesterRole='student';
+var STUDENT_MAX_ADVANCE_DAYS=30; // keep in sync with Code.gs
+var DAY=86400000;
+var blocks={};            // itemId -> [{kind:'reserved'|'out', start:Date, end:Date}]
+var editing='start';   // 'start' | 'end' — which date the next calendar tap sets (always one of the two)
+var selStart=null, selEnd=null;   // local-midnight Dates
+var viewMonth=startOfDay(new Date()); viewMonth.setDate(1);
+var dataLoaded=false;
+
+function startOfDay(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+function endOfDay(d){ return new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59,59); }
+function fmt(d){ return d.toLocaleDateString(undefined,{day:'numeric',month:'short'}); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function itemName(id){ var i=inventory.find(function(x){return x.id===id;}); return i?i.name:id; }
 
 function showToast(msg,icon,err){
   var t=document.getElementById('toast');
@@ -182,8 +277,214 @@ function showToast(msg,icon,err){
   t._timer=setTimeout(function(){t.classList.remove('show');},3400);
 }
 
+/* ── Build per-item blocks (reserved + currently out) ── */
+var selectedRef='';
+function fmtD(d){ return d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}); }
+function fmtT(d){ var h=d.getHours(), m=d.getMinutes(); if((h===0&&m===0)||(h===23&&m===59)) return ''; return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }
+function fmtDT(d){ var t=fmtT(d); return fmtD(d)+(t?', '+t:''); }
+function timeParts(id){ var v=(document.getElementById(id).value||'').split(':'); return {h:+v[0]||0,m:+v[1]||0}; }
+function windowStart(){ var t=timeParts('start-time'); return new Date(selStart.getFullYear(),selStart.getMonth(),selStart.getDate(),t.h,t.m); }
+function windowEnd(){ var t=timeParts('end-time'); return new Date(selEnd.getFullYear(),selEnd.getMonth(),selEnd.getDate(),t.h,t.m); }
+function timeError(){
+  if(!selStart||!selEnd) return '';
+  if(!document.getElementById('start-time').value||!document.getElementById('end-time').value) return 'Choose a start time and a return time.';
+  var s=windowStart(), e=windowEnd();
+  if(e<=s) return 'The return time must be after the start time.';
+  if(s<new Date(Date.now()-60000)) return 'That start time has already passed. Pick a later time.';
+  return '';
+}
+function datesReady(){ return !!(selStart&&selEnd) && !timeError(); }
+function nDays(s,e){ return Math.round((startOfDay(e)-startOfDay(s))/DAY)+1; }
+function plural(n,w){ return n+' '+w+(n===1?'':'s'); }
+
+function buildBlocks(){
+  blocks={};
+  var now=new Date(), todayEnd=endOfDay(now), far=new Date(now.getFullYear()+5,11,31);
+  function add(id,kind,s,e,x){ var o={kind:kind,start:s,end:e}; for(var k in (x||{})) o[k]=x[k]; (blocks[id]=blocks[id]||[]).push(o); }
+
+  reservations.forEach(function(r){
+    var s=new Date(r.startDate), e=new Date(r.endDate);
+    if(isNaN(s)||isNaN(e)) return;
+    var kx=r.type==='kit'?{kitId:r.refId}:null;
+    r.itemIds.forEach(function(id){ add(id,'reserved',s,e,kx); });
+  });
+
+  var coveredOut={};
+  bookings.forEach(function(b){
+    var ids = b.type==='kit' ? ((kits.find(function(k){return k.id===b.refId;})||{}).itemIds||[]) : [b.refId];
+    var s=new Date(b.checkoutTime), e=new Date(b.dueTime), x={};
+    if(b.type==='kit') x.kitId=b.refId;
+    if(isNaN(s.getTime())) s=now;
+    if(isNaN(e.getTime())){ e=far; x.unknown=true; }
+    else { x.due=e; if(e<now){ x.overdue=true; e=todayEnd; } }
+    ids.forEach(function(id){ add(id,'out',s,e,x); coveredOut[id]=true; });
+  });
+
+  // Items marked out with no booking record. If they belong to a kit, attribute
+  // them to that kit (preferring one whose items are all out) so the kit shows
+  // once instead of every item being listed separately.
+  function isOut(id){ var i=inventory.find(function(x){return x.id===id;}); return !!i && i.status==='out'; }
+  inventory.forEach(function(it){
+    if(it.status!=='out' || coveredOut[it.id]) return;
+    var mine=kits.filter(function(k){return k.itemIds.indexOf(it.id)>-1;});
+    var best=mine.find(function(k){return k.itemIds.every(isOut);})||mine[0];
+    var x={unknown:true}; if(best) x.kitId=best.id;
+    add(it.id,'out',now,far,x);
+  });
+}
+
+function overlaps(b,s,e){ return b.start<e && s<b.end; }
+
+// Human-readable description of how long something is out / reserved for
+function blockText(b){
+  if(b.kind==='out'){
+    if(b.unknown) return 'Out indefinitely (until it is returned)';
+    if(b.overdue) return 'Out, overdue (was due '+fmtDT(b.due)+')';
+    var left=Math.round((startOfDay(b.end)-startOfDay(new Date()))/DAY);
+    var when = left<=0 ? 'due back today' : left===1 ? 'back tomorrow' : 'back in '+left+' days';
+    return 'Out until '+fmtDT(b.end)+' ('+when+')';
+  }
+  var n=nDays(b.start,b.end), one=startOfDay(b.start).getTime()===startOfDay(b.end).getTime(), et=fmtT(b.end);
+  var range = one ? (et ? fmtDT(b.start)+' to '+et : fmtDT(b.start)) : fmtDT(b.start)+' to '+fmtDT(b.end);
+  return 'Reserved '+range+' ('+plural(n,'day')+')';
+}
+
+// All blocks overlapping [s,e] for a list of item ids
+function blockers(ids,s,e){
+  var out=[];
+  ids.forEach(function(id){
+    (blocks[id]||[]).forEach(function(b){ if(overlaps(b,s,e)) out.push({id:id,b:b}); });
+  });
+  out.sort(function(a,c){ return (a.b.kind===c.b.kind?0:a.b.kind==='out'?-1:1) || a.b.start-c.b.start; });
+  return out;
+}
+
+/* ── Calendar ── */
+function dayInfo(d){
+  var s=startOfDay(d), e=new Date(s.getTime()+DAY), out={}, resv={};
+  Object.keys(blocks).forEach(function(id){
+    blocks[id].forEach(function(b){
+      if(!overlaps(b,s,e)) return;
+      var m=b.kind==='out'?out:resv, k=b.kitId?'kit:'+b.kitId:id;
+      if(!m[k]) m[k]={id:id,name:b.kitId?kitName(b.kitId):itemName(id),b:b};
+    });
+  });
+  function list(m){ return Object.keys(m).map(function(k){return m[k];}); }
+  return {out:list(out), reserved:list(resv)};
+}
+
+function renderCalendar(){
+  var grid=document.getElementById('cal-grid');
+  var y=viewMonth.getFullYear(), m=viewMonth.getMonth();
+  document.getElementById('cal-title').textContent=viewMonth.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  var today=startOfDay(new Date());
+  var maxDate=STUDENT_MAX_ADVANCE_DAYS>0 ? startOfDay(new Date(Date.now()+STUDENT_MAX_ADVANCE_DAYS*DAY)) : null;
+  var firstDow=(new Date(y,m,1).getDay()+6)%7;
+  var daysInMonth=new Date(y,m+1,0).getDate();
+  var html=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(n){return '<div class="cal-dow">'+n+'</div>';}).join('');
+  for(var i=0;i<firstDow;i++) html+='<div class="cal-day blank"></div>';
+
+  for(var d=1;d<=daysInMonth;d++){
+    var date=new Date(y,m,d), t=date.getTime();
+    var disabled = date<today || (maxDate && date>maxDate) || (editing==='end' && selStart && date<selStart);
+    var info=dayInfo(date), o=info.out.length, r=info.reserved.length;
+    var cls='cal-day';
+    if(disabled) cls+=' disabled';
+    if(t===today.getTime()) cls+=' today';
+    if(o) cls+=' has-out';
+    if(r) cls+=' has-resv';
+    if(selStart && selEnd && date>selStart && date<selEnd) cls+=' in-range';
+    if((selStart&&t===selStart.getTime())||(selEnd&&t===selEnd.getTime())) cls+=' sel';
+    var chips='', tip='';
+    if(o||r){
+      chips='<span class="chips">'+(o?'<span class="chip o">'+o+'</span>':'')+(r?'<span class="chip r">'+r+'</span>':'')+'</span>';
+      if(o) tip+='Out: '+info.out.map(function(x){return x.name;}).join(', ')+'. ';
+      if(r) tip+='Reserved: '+info.reserved.map(function(x){return x.name;}).join(', ')+'.';
+    }
+    html+='<button type="button" class="'+cls+'" data-t="'+t+'"'+(disabled?' disabled':'')+(tip?' title="'+esc(tip)+'"':'')+'>'+d+chips+'</button>';
+  }
+  grid.innerHTML=html;
+  var prevOk = !(y===today.getFullYear() && m===today.getMonth());
+  document.getElementById('cal-prev').disabled=!prevOk;
+  document.getElementById('cal-next').disabled = !!maxDate && new Date(y,m+1,1)>maxDate;
+}
+
+function showDayInfo(date){
+  var box=document.getElementById('day-info'), info=dayInfo(date);
+  var h='<b>'+fmtD(date)+'</b>';
+  if(!info.out.length && !info.reserved.length) h+='<br>Nothing reserved or out.';
+  info.out.forEach(function(x){ h+='<br><span class="tag" style="background:var(--out)"></span>'+esc(x.name)+' — '+blockText(x.b); });
+  info.reserved.forEach(function(x){ h+='<br><span class="tag" style="background:var(--resv)"></span>'+esc(x.name)+' — '+blockText(x.b); });
+  box.className='day-info show'; box.innerHTML=h;
+}
+
+// Overview list: everything out now + upcoming reservations, kit items grouped
+function renderOverview(){
+  var now=new Date(), groups={};
+  Object.keys(blocks).forEach(function(id){
+    blocks[id].forEach(function(b){
+      if(b.end<now) return;
+      var key=b.kind+'|'+b.start.getTime()+'|'+b.end.getTime()+'|'+(b.overdue?1:0)+(b.unknown?1:0)+(b.kitId?'|k'+b.kitId:'');
+      var g=groups[key]=groups[key]||{b:b,names:[]};
+      var nm=b.kitId?kitName(b.kitId):itemName(id);
+      if(g.names.indexOf(nm)<0) g.names.push(nm);
+    });
+  });
+  var all=Object.keys(groups).map(function(k){return groups[k];});
+  function section(kind,title,color){
+    var rows=all.filter(function(g){return g.b.kind===kind;}).sort(function(a,c){return (kind==='out'?a.b.end-c.b.end:a.b.start-c.b.start);});
+    var h='<div class="ov-head"><i style="background:'+color+'"></i>'+title+' ('+rows.reduce(function(n,g){return n+g.names.length;},0)+')</div>';
+    if(!rows.length) return h+'<div class="ov-empty">Nothing right now.</div>';
+    return h+rows.map(function(g){ return '<div class="ov-row"><b>'+g.names.map(esc).join(', ')+'</b><span>'+blockText(g.b)+'</span></div>'; }).join('');
+  }
+  document.getElementById('overview-body').innerHTML=section('out','Currently out','var(--out)')+section('reserved','Reserved','var(--resv)');
+}
+
+function onDayClick(date){
+  showDayInfo(date);
+  if(editing==='start'){
+    selStart=date;
+    if(selEnd&&selEnd<selStart) selEnd=null;
+    if(!selEnd) editing='end';          // move on to the end date once the start is set
+  } else {
+    if(!selStart){ selStart=date; }     // safety: nothing chosen yet
+    else selEnd=date;                   // stays on "end" so another tap changes the end again
+  }
+  updateRange();
+}
+
+function updateRange(){
+  var sum=document.getElementById('range-summary'), hint=document.getElementById('cal-hint');
+  var f=document.getElementById('pick-from'), t=document.getElementById('pick-to');
+  document.getElementById('pick-from-val').textContent=selStart?fmtD(selStart):'Tap a day';
+  document.getElementById('pick-to-val').textContent=selEnd?fmtD(selEnd):(selStart?'Tap a day':'—');
+  f.classList.toggle('empty',!selStart); t.classList.toggle('empty',!selEnd);
+  if(!selStart) editing='start';
+  var mode=editing;
+  f.classList.toggle('active',mode==='start'); t.classList.toggle('active',mode==='end');
+  f.querySelector('small').textContent = mode==='start' ? 'From: tap a day below' : 'From (tap to change)';
+  t.querySelector('small').textContent = mode==='end' ? 'Until: tap a day below' : 'Until (tap to change)';
+  var tag=document.getElementById('mode-tag');
+  tag.className='mode-tag '+mode;
+  tag.textContent = mode==='start' ? (selStart?'Changing your START date':'Selecting your START date') : (selEnd?'Changing your END date':'Selecting your END date');
+  var g=document.getElementById('cal-grid');
+  g.classList.toggle('mode-start',mode==='start'); g.classList.toggle('mode-end',mode==='end');
+  document.getElementById('clear-dates').style.display=selStart?'':'none';
+  document.getElementById('one-day').style.display=(selStart&&!selEnd)?'':'none';
+  sum.textContent = (selStart&&selEnd) ? plural(nDays(selStart,selEnd),'day')+' selected' : '';
+  if(mode==='start') hint.textContent = selStart ? 'Tap a day to set a new start date. To change your end date instead, tap Until.' : 'Step 1: tap the first day you need the equipment.';
+  else hint.textContent = selEnd ? 'Tap a day to set a new end date. To change your start date instead, tap From. Then adjust the times and choose your item below.' : 'Step 2: now tap the last day you need it. Days before your start are greyed out. To change the start, tap From.';
+  var te=timeError(), err=document.getElementById('range-err');
+  err.className='status-box status-err'+(te?' show':'');
+  err.innerHTML=te?'<i class="ti ti-alert-triangle"></i><div>'+te+'</div>':'';
+  document.getElementById('item-card').classList.toggle('locked',!datesReady());
+  renderCalendar();
+  renderRefOptions();
+}
+
+/* ── Item / kit selection ── */
 function setBookType(t){
-  bookType=t;
+  bookType=t; selectedRef='';
   document.getElementById('type-btn-item').classList.toggle('active',t==='item');
   document.getElementById('type-btn-kit').classList.toggle('active',t==='kit');
   document.getElementById('cat-label-item').textContent = t==='item' ? 'Category' : 'Kit type';
@@ -195,38 +496,70 @@ function setBookType(t){
 function renderCatOptions(){
   var sel=document.getElementById('cat-select');
   var list = bookType==='item' ? categories : kitTypes;
-  var allLabel = bookType==='item' ? 'All categories' : 'All kit types';
-  sel.innerHTML='<option value="">'+allLabel+'</option>'+list.map(function(c){return '<option value="'+c.key+'">'+c.label+'</option>';}).join('');
+  sel.innerHTML='<option value="">'+(bookType==='item'?'All categories':'All kit types')+'</option>'+
+    list.map(function(c){return '<option value="'+esc(c.key)+'">'+esc(c.label)+'</option>';}).join('');
 }
 
-function itemAvailableNow(item){ return item.status==='in'; }
+function kitName(id){ var k=kits.find(function(x){return x.id===id;}); return k?k.name:id; }
+function catLabel(key){ var c=categories.find(function(x){return x.key===key;}); return c?c.label:''; }
+
+function whyHtml(row){
+  var lines=[], seen={};
+  row.bl.forEach(function(x){
+    var txt=blockText(x.b);
+    if(row.isKit && x.b.kitId!==row.id){
+      var who=x.b.kitId?kitName(x.b.kitId):itemName(x.id);
+      txt=who+': '+txt.charAt(0).toLowerCase()+txt.slice(1);
+    }
+    var k=x.b.kind+txt; if(seen[k]) return; seen[k]=1;
+    lines.push('<span class="why '+(x.b.kind==='out'?'o':'r')+'">'+esc(txt)+'</span>');
+  });
+  var extra=lines.length>3 ? '<span class="why" style="color:var(--mid)">+'+(lines.length-3)+' more</span>' : '';
+  return lines.slice(0,3).join('')+extra;
+}
 
 function renderRefOptions(){
-  var catFilter=document.getElementById('cat-select').value;
-  var sel=document.getElementById('ref-select');
-  if(bookType==='item'){
-    var list=inventory.filter(function(x){return !catFilter || x.category===catFilter;});
-    if(!list.length){ sel.innerHTML='<option value="">No items in this category</option>'; }
-    else {
-      sel.innerHTML='<option value="">Choose an item…</option>'+list.map(function(x){
-        var flag = itemAvailableNow(x) ? '' : ' (currently checked out)';
-        return '<option value="'+x.id+'">'+x.name+flag+'</option>';
-      }).join('');
-    }
-  } else {
-    var klist=kits.filter(function(k){return !catFilter || k.type===catFilter;});
-    if(!klist.length){ sel.innerHTML='<option value="">No kits in this type</option>'; }
-    else {
-      sel.innerHTML='<option value="">Choose a kit…</option>'+klist.map(function(k){
-        return '<option value="'+k.id+'">'+k.name+' ('+k.itemIds.length+' items)</option>';
-      }).join('');
-    }
+  var ready=datesReady();
+  var catSel=document.getElementById('cat-select'), box=document.getElementById('ref-list');
+  catSel.disabled=!ready;
+  if(!ready){ selectedRef=''; box.innerHTML='<div class="avail-hint">Pick your dates first.</div>'; onRefChange(); return; }
+
+  var s=windowStart(), e=windowEnd(), f=catSel.value, isKit=bookType==='kit';
+  var src = isKit ? kits.filter(function(k){return !f||k.type===f;}) : inventory.filter(function(x){return !f||x.category===f;});
+  var rows=src.map(function(x){
+    var ids=isKit?x.itemIds:[x.id];
+    return {id:x.id,name:x.name,isKit:isKit,bl:blockers(ids,s,e),
+            sub:isKit?plural(ids.length,'item'):catLabel(x.category)};
+  });
+  if(!isKit) rows=rows.filter(function(r){
+    return !(r.bl.length && r.bl.every(function(x){return x.b.kind==='out' && x.b.kitId;}));
+  });
+  var avail=rows.filter(function(r){return !r.bl.length;}), off=rows.filter(function(r){return r.bl.length;});
+  if(selectedRef && !avail.some(function(r){return r.id===selectedRef;})) selectedRef='';
+
+  if(!rows.length){ box.innerHTML='<div class="avail-hint">'+(isKit?'No kits in this type.':'No items in this category.')+'</div>'; onRefChange(); return; }
+  var h='';
+  if(avail.length){
+    h+='<div class="ref-group">Available on your dates ('+avail.length+')</div>';
+    h+=avail.map(function(r){
+      return '<button type="button" class="ref'+(r.id===selectedRef?' sel':'')+'" data-id="'+esc(r.id)+'" aria-pressed="'+(r.id===selectedRef)+'">'+
+        '<span><span class="nm">'+esc(r.name)+'</span>'+(r.sub?'<span class="sub">'+esc(r.sub)+'</span>':'')+'</span><span class="badge ok">Available</span></button>';
+    }).join('');
+  } else h+='<div class="ref-group">Nothing is free for all of these dates.</div>';
+  if(off.length){
+    h+='<div class="ref-group">Not available ('+off.length+')</div>';
+    h+=off.map(function(r){
+      var hasOut=r.bl.some(function(x){return x.b.kind==='out';});
+      return '<div class="ref off" aria-disabled="true"><span><span class="nm">'+esc(r.name)+'</span>'+whyHtml(r)+'</span>'+
+        '<span class="badge '+(hasOut?'o':'r')+'">'+(hasOut?'Out':'Reserved')+'</span></div>';
+    }).join('');
   }
-  onRefOrDateChange();
+  box.innerHTML=h;
+  onRefChange();
 }
 
 function itemIdsForSelection(){
-  var refId=document.getElementById('ref-select').value;
+  var refId=selectedRef;
   if(!refId) return {refId:null,refName:'',itemIds:[]};
   if(bookType==='item'){
     var item=inventory.find(function(x){return x.id===refId;});
@@ -236,90 +569,20 @@ function itemIdsForSelection(){
   return {refId:refId,refName:kit?kit.name:refId,itemIds:kit?kit.itemIds:[]};
 }
 
-// Client-side availability preview against the reservations we already
-// fetched. This is UX only — the server re-checks for real when the
-// request is actually submitted, so a stale local copy can't let a
-// double-booking through.
-function onRefOrDateChange(){
-  var sel=itemIdsForSelection();
-  var startVal=document.getElementById('start-date').value;
-  var endVal=document.getElementById('end-date').value;
-  var hint=document.getElementById('avail-hint');
-  var box=document.getElementById('avail-status');
-  var submitBtn=document.getElementById('submit-btn');
-  var submitLabel=document.getElementById('submit-btn-label');
+function onRefChange(){
+  var sel=itemIdsForSelection(), ready=datesReady();
+  var hint=document.getElementById('avail-hint'), box=document.getElementById('avail-status');
+  var btn=document.getElementById('submit-btn'), lbl=document.getElementById('submit-btn-label');
   box.className='status-box';
-  availabilityResult=null;
-
-  if(!sel.refId){
-    hint.style.display='';
-    hint.textContent='Choose an item and dates to check availability.';
-    submitBtn.disabled=true; submitLabel.textContent='Choose an item and dates first';
-    return;
-  }
-  if(!startVal||!endVal){
-    hint.style.display='';
-    hint.textContent='Pick a start and end date to check availability.';
-    submitBtn.disabled=true; submitLabel.textContent='Choose dates';
-    return;
-  }
-  var start=new Date(startVal), end=new Date(endVal+'T23:59:59');
-  var today=new Date(); today.setHours(0,0,0,0);
-  if(start<today){
-    hint.style.display='none';
-    box.classList.add('show','status-err');
-    box.innerHTML='<i class="ti ti-alert-triangle"></i><div>The start date can\'t be in the past.</div>';
-    submitBtn.disabled=true; submitLabel.textContent='Fix the dates';
-    return;
-  }
-  if(end<=start){
-    hint.style.display='none';
-    box.classList.add('show','status-err');
-    box.innerHTML='<i class="ti ti-alert-triangle"></i><div>The end date must be after the start date.</div>';
-    submitBtn.disabled=true; submitLabel.textContent='Fix the dates';
-    return;
-  }
-  if(requesterRole==='student' && STUDENT_MAX_ADVANCE_DAYS>0){
-    var maxDate=new Date(Date.now()+STUDENT_MAX_ADVANCE_DAYS*24*3600000);
-    if(start>maxDate){
-      hint.style.display='none';
-      box.classList.add('show','status-err');
-      box.innerHTML='<i class="ti ti-alert-triangle"></i><div>Students can only book up to '+STUDENT_MAX_ADVANCE_DAYS+' days ahead.</div>';
-      submitBtn.disabled=true; submitLabel.textContent='Outside student booking window';
-      return;
-    }
-  }
-
+  if(!ready){ hint.style.display=''; hint.textContent='Pick your dates first. Anything out or reserved on those dates will be greyed out.'; btn.disabled=true; lbl.textContent='Choose dates first'; return; }
+  if(!sel.refId){ hint.style.display=''; hint.textContent='Greyed-out entries are out or reserved on your dates.'; btn.disabled=true; lbl.textContent='Choose an item'; return; }
   hint.style.display='none';
-  var conflicts=[];
-  reservations.forEach(function(r){
-    var shared=r.itemIds.filter(function(id){return sel.itemIds.indexOf(id)>-1;});
-    if(!shared.length)return;
-    var rStart=new Date(r.startDate), rEnd=new Date(r.endDate);
-    if(start<rEnd && rStart<end){
-      conflicts.push(r);
-    }
-  });
-
-  if(conflicts.length){
-    box.classList.add('show','status-warn');
-    box.innerHTML='<i class="ti ti-alert-triangle"></i><div>Already reserved for part of this date range. Try different dates or another item.'+
-      '<ul>'+conflicts.slice(0,3).map(function(c){
-        return '<li>'+new Date(c.startDate).toLocaleDateString()+' – '+new Date(c.endDate).toLocaleDateString()+'</li>';
-      }).join('')+'</ul></div>';
-    submitBtn.disabled=true; submitLabel.textContent='Not available for these dates';
-    availabilityResult={available:false};
-  } else {
-    box.classList.add('show','status-ok');
-    var currentlyOut = bookType==='item' && sel.itemIds.length===1 && inventory.find(function(x){return x.id===sel.itemIds[0];}) && !itemAvailableNow(inventory.find(function(x){return x.id===sel.itemIds[0];}));
-    box.innerHTML='<i class="ti ti-check"></i><div>Available for these dates.'+
-      (currentlyOut?' Note: this item is currently checked out to someone else right now, but nothing else has reserved it for your dates.':'')+
-      '</div>';
-    submitBtn.disabled=false; submitLabel.textContent='Request reservation';
-    availabilityResult={available:true};
-  }
+  box.classList.add('show','status-ok');
+  box.innerHTML='<i class="ti ti-check"></i><div>'+esc(sel.refName)+' is free from '+fmtDT(windowStart())+' to '+fmtDT(windowEnd())+'.</div>';
+  btn.disabled=false; lbl.textContent='Request reservation';
 }
 
+/* ── Data + submit ── */
 async function loadAvailability(){
   try{
     var res=await fetch(SHEETS_API_URL+'?action=availability');
@@ -330,10 +593,14 @@ async function loadAvailability(){
     categories=data.categories||[];
     kitTypes=data.kitTypes||[];
     reservations=data.reservations||[];
+    bookings=data.bookings||[];
+    buildBlocks();
     renderCatOptions();
+    renderCalendar();
     renderRefOptions();
+    renderOverview();
   }catch(err){
-    document.getElementById('avail-hint').textContent='Could not load equipment data — check your internet connection and try refreshing.';
+    document.getElementById('cal-hint').textContent='Could not load equipment data — check your internet connection and try refreshing.';
     showToast('Could not load equipment list','ti-alert-triangle',true);
   }
 }
@@ -342,53 +609,35 @@ async function submitReservation(){
   var sel=itemIdsForSelection();
   var name=document.getElementById('student-name').value.trim();
   var email=document.getElementById('student-email').value.trim();
-  var startVal=document.getElementById('start-date').value;
-  var endVal=document.getElementById('end-date').value;
-
+  if(!datesReady()){showToast(timeError()||'Choose your dates first','ti-alert-triangle',true);return;}
   if(!sel.refId){showToast('Choose an item or kit first','ti-alert-triangle',true);return;}
   if(!name){showToast('Enter your name','ti-alert-triangle',true);return;}
-  if(requesterRole==='teacher' && !email){showToast('Staff email is required for teacher bookings','ti-alert-triangle',true);return;}
-  if(!availabilityResult||!availabilityResult.available){showToast('Those dates are not available','ti-alert-triangle',true);return;}
 
-  var submitBtn=document.getElementById('submit-btn');
-  var submitLabel=document.getElementById('submit-btn-label');
-  submitBtn.disabled=true;
-  var prevLabel=submitLabel.textContent;
-  submitLabel.textContent='Submitting…';
+  var btn=document.getElementById('submit-btn'), lbl=document.getElementById('submit-btn-label');
+  btn.disabled=true; var prev=lbl.textContent; lbl.textContent='Submitting…';
 
-  var payload={
-    type:bookType, refId:sel.refId,
-    requesterType:requesterRole,
-    studentName:name, studentEmail:email,
-    startDate:new Date(startVal).toISOString(),
-    endDate:new Date(endVal+'T23:59:59').toISOString()
-  };
-
+  var payload={type:bookType,refId:sel.refId,requesterType:requesterRole,studentName:name,studentEmail:email,
+    startDate:windowStart().toISOString(),endDate:windowEnd().toISOString()};
+  var s0=windowStart(),e0=windowEnd();
   try{
-    var res=await fetch(SHEETS_API_URL,{
-      method:'POST',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({action:'create_reservation',reservation:payload})
-    });
+    var res=await fetch(SHEETS_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({action:'create_reservation',reservation:payload})});
     var data=await res.json();
     if(data.ok){
       document.getElementById('form-flow').style.display='none';
       document.getElementById('success-card').classList.add('show');
-      document.getElementById('success-detail').textContent=
-        sel.refName+' reserved from '+new Date(startVal).toLocaleDateString()+' to '+new Date(endVal).toLocaleDateString()+'.';
+      document.getElementById('success-detail').textContent=sel.refName+' reserved from '+fmtDT(s0)+' to '+fmtDT(e0)+'.';
       showToast('Reservation submitted','ti-check',false);
     } else if(data.conflicts && data.conflicts.length){
-      showToast('Someone else just booked this for those dates — refreshing availability','ti-alert-triangle',true);
+      showToast('Someone just took this for those dates — refreshing','ti-alert-triangle',true);
       await loadAvailability();
-      onRefOrDateChange();
     } else {
       showToast(data.error||'Could not submit the reservation','ti-alert-triangle',true);
     }
   }catch(err){
     showToast('Could not reach the server. Check your connection and try again.','ti-alert-triangle',true);
   }
-  submitBtn.disabled=false;
-  submitLabel.textContent=prevLabel;
+  btn.disabled=false; lbl.textContent=prev;
 }
 
 function resetForm(){
@@ -396,18 +645,54 @@ function resetForm(){
   document.getElementById('success-card').classList.remove('show');
   document.getElementById('student-name').value='';
   document.getElementById('student-email').value='';
-  document.getElementById('start-date').value='';
-  document.getElementById('end-date').value='';
   document.getElementById('cat-select').value='';
-  onRefOrDateChange();
-  renderRefOptions();
+  selectedRef=''; editing='start';
+  document.getElementById('day-info').className='day-info';
+  selStart=selEnd=null;
+  updateRange();
   loadAvailability();
 }
 
 (function init(){
-  var today=new Date().toISOString().slice(0,10);
-  document.getElementById('start-date').setAttribute('min',today);
-  document.getElementById('end-date').setAttribute('min',today);
+  document.getElementById('cal-grid').addEventListener('click',function(ev){
+    var b=ev.target.closest('.cal-day[data-t]');
+    if(b && !b.disabled) onDayClick(new Date(+b.getAttribute('data-t')));
+  });
+  document.getElementById('ref-list').addEventListener('click',function(ev){
+    var b=ev.target.closest('.ref[data-id]'); if(!b) return;
+    selectedRef=b.getAttribute('data-id');
+    Array.prototype.forEach.call(document.querySelectorAll('#ref-list .ref[data-id]'),function(x){
+      var on=x===b; x.classList.toggle('sel',on); x.setAttribute('aria-pressed',on);
+    });
+    onRefChange();
+  });
+  var grid=document.getElementById('cal-grid');
+  function clearPreview(){ Array.prototype.forEach.call(grid.querySelectorAll('.preview'),function(x){x.classList.remove('preview');}); }
+  grid.addEventListener('mouseover',function(ev){
+    clearPreview();
+    var b=ev.target.closest('.cal-day[data-t]');
+    if(!selStart||selEnd||!b||b.disabled) return;
+    var t=+b.getAttribute('data-t'); if(t<=selStart.getTime()) return;
+    Array.prototype.forEach.call(grid.querySelectorAll('.cal-day[data-t]'),function(x){
+      var tt=+x.getAttribute('data-t'); if(tt>selStart.getTime()&&tt<=t) x.classList.add('preview');
+    });
+  });
+  grid.addEventListener('mouseleave',clearPreview);
+  ['start-time','end-time'].forEach(function(id){ document.getElementById(id).addEventListener('change',updateRange); });
+  [['pick-from','start'],['pick-to','end']].forEach(function(p){
+    document.getElementById(p[0]).addEventListener('click',function(ev){
+      if(ev.target.tagName==='INPUT') return;
+      if(p[1]==='end' && !selStart) return;
+      editing=p[1];
+      updateRange();
+    });
+  });
+  document.getElementById('one-day').onclick=function(){ if(selStart){ selEnd=selStart; updateRange(); } };
+  document.getElementById('cal-prev').onclick=function(){ viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()-1,1); renderCalendar(); };
+  document.getElementById('cal-next').onclick=function(){ viewMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,1); renderCalendar(); };
+  document.getElementById('clear-dates').onclick=function(){ selStart=selEnd=null; editing='start'; document.getElementById('day-info').className='day-info'; updateRange(); };
+  updateRange();
+  renderOverview();
   loadAvailability();
 })();
 </script>
